@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-root_dir = 'data'
+root_dir = '/home/user/datasets/kitti/kitti'
 
 class_list = ["Car", "Pedestrian", "Cyclist"]
 
@@ -33,8 +33,10 @@ boundary_back = {
     "maxZ": 1.27
 }
 
-BEV_WIDTH = 608 # across y axis -25m ~ 25m
-BEV_HEIGHT = 608 # across x axis 0m ~ 50m
+#BEV_WIDTH = 608 # across y axis -25m ~ 25m
+BEV_WIDTH = 480  # across y axis -25m ~ 25m
+#BEV_HEIGHT = 608 # across x axis 0m ~ 50m
+BEV_HEIGHT = 480  # across x axis 0m ~ 50m
 
 DISCRETIZATION = (boundary["maxX"] - boundary["minX"])/BEV_HEIGHT
 

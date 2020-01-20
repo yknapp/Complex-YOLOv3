@@ -12,7 +12,7 @@ class KittiDataset(torch_data.Dataset):
         self.split = split
 
         is_test = self.split == 'test'
-        self.imageset_dir = os.path.join(root_dir, 'KITTI', 'object', folder)
+        self.imageset_dir = os.path.join(root_dir, 'object', folder)
         self.lidar_path = os.path.join(self.imageset_dir, "velodyne")
 
         self.image_path = os.path.join(self.imageset_dir, "image_2")

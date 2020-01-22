@@ -11,15 +11,17 @@ from torch.utils.data import DataLoader
 from torch.autograd import Variable
 import torch.optim as optim
 
-import utils.config as cnf
-from utils.kitti_yolo_dataset import KittiYOLODataset
+#import utils.config as cnf
+import utils.config_lyft as cnf
+#from utils.kitti_yolo_dataset import KittiYOLODataset
+from utils.lyft_yolo_dataset import LyftYOLODataset
 
 def evaluate(model, iou_thres, conf_thres, nms_thres, img_size, batch_size):
     model.eval()
 
     # Get dataloader
     split='valid'
-    dataset = KittiYOLODataset(cnf.root_dir, split=split, mode='EVAL', folder='training', data_aug=False)
+    dataset = LyftYOLODataset(cnf.root_dir, split=split, mode='EVAL', folder='training', data_aug=False)
     dataloader = torch.utils.data.DataLoader(
         dataset, batch_size=batch_size, shuffle=False, num_workers=1, collate_fn=dataset.collate_fn
     )

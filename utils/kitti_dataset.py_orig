@@ -20,7 +20,7 @@ class KittiDataset(torch_data.Dataset):
         self.label_path = os.path.join(self.imageset_dir, "label_2")
 
         if not is_test:
-            split_dir = os.path.join('data', 'KITTI', 'ImageSets', split+'.txt')
+            split_dir = os.path.join('data', 'LYFT', 'ImageSets', split+'.txt')
             self.image_idx_list = [x.strip() for x in open(split_dir).readlines()]
         else:
             self.files = sorted(glob.glob("%s/*.bin" % self.lidar_path))

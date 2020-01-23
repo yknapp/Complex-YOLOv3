@@ -1,6 +1,6 @@
 import glob
 
-lyft_lidar_dir = "/home/user/lyft_kitti/object/training/velodyne/*.bin"
+lyft_lidar_dir = "/home/user/datasets/lyft_kitti/object/training/velodyne/*.bin"
 lidar_filenames = glob.glob(lyft_lidar_dir)
 number = 1481
 

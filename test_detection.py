@@ -15,7 +15,8 @@ import utils.lyft_aug_utils as aug_utils
 import utils.lyft_bev_utils as bev_utils
 #from utils.kitti_yolo_dataset import KittiYOLODataset
 from utils.lyft_yolo_dataset import LyftYOLODataset
-import utils.config as cnf
+#import utils.config as cnf
+import utils.config_lyft as cnf
 import utils.mayavi_viewer as mview
 
 def predictions_to_kitti_format(img_detections, calib, img_shape_2d, img_size, RGB_Map=None):

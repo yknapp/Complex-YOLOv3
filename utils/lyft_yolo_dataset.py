@@ -81,7 +81,7 @@ class LyftYOLODataset(LyftDataset):
 
     def __getitem__(self, index):
         
-        sample_id = int(self.sample_id_list[index])
+        sample_id = self.sample_id_list[index]
 
         if self.mode in ['TRAIN', 'EVAL']:
             lidarData = self.get_lidar(sample_id)    

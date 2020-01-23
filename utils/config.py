@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-root_dir = '/home/user/datasets/kitti/kitti'
+root_dir = '/home/user/work/master_thesis/datasets/kitti/kitti'
 
 class_list = ["Car", "Pedestrian", "Cyclist"]
 

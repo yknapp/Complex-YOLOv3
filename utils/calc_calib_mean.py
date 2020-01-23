@@ -22,8 +22,8 @@ def read_calib_file(filepath):
             'Tr_velo2cam': Tr_velo_to_cam.reshape(3, 4)}
 
 
-#calib_path = "/home/user/datasets/kitti/kitti/object/training/calib/*.txt"
-calib_path = "/home/user/lyft_kitti/train/calib/*.txt"
+#calib_path = "/home/user/work/master_thesis/datasets/kitti/kitti/object/training/calib/*.txt"
+calib_path = "/home/user/work/master_thesis/datasets/lyft_kitti/object/training/calib/*.txt"
 calib_filenames = glob.glob(calib_path)
 
 Tr_velo_to_cam_addition = np.array([[.0, .0, .0, .0], [.0, .0, .0, .0], [.0, .0, .0, .0]])

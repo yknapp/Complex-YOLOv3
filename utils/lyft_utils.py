@@ -40,11 +40,11 @@ class Object3d(object):
         # Car and Van ==> Car class
         # Pedestrian and Person_Sitting ==> Pedestrian Class
         CLASS_NAME_TO_ID = {
-            'Car': 				0,
-            'Pedestrian': 		1,
-            'Cyclist': 			2,
-            'Van': 				0,
-            'Person_sitting': 	1
+            'car': 				0,
+            'pedestrian': 		1,
+            'cyclist': 			2,
+            'van': 				0,
+            'person_sitting': 	1
         }
         if cls_type not in CLASS_NAME_TO_ID.keys():
             return -1

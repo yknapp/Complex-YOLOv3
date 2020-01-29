@@ -15,6 +15,7 @@ import utils.lyft_aug_utils as aug_utils
 import utils.lyft_bev_utils as bev_utils
 #from utils.kitti_yolo_dataset import KittiYOLODataset
 from utils.lyft_yolo_dataset import LyftYOLODataset
+from utils.lyft2kitti_yolo_dataset import Lyft2KittiYOLODataset
 #import utils.config as cnf
 import utils.config_lyft as cnf
 import utils.mayavi_viewer as mview
@@ -109,7 +110,8 @@ if __name__ == "__main__":
     # Eval mode
     model.eval()
     
-    dataset = LyftYOLODataset(cnf.root_dir, split=opt.split, mode='TEST', folder=opt.folder, data_aug=False)
+    #dataset = LyftYOLODataset(cnf.root_dir, split=opt.split, mode='TEST', folder=opt.folder, data_aug=False)
+    dataset = Lyft2KittiYOLODataset(cnf.root_dir, split=opt.split, mode='TEST', folder=opt.folder, data_aug=False)
     data_loader = torch_data.DataLoader(dataset, 1, shuffle=False)
 
     Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor

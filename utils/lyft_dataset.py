@@ -18,6 +18,7 @@ class LyftDataset(torch_data.Dataset):
         self.image_path = os.path.join(self.imageset_dir, "image_2")
         self.calib_path = os.path.join(self.imageset_dir, "calib")
         self.label_path = os.path.join(self.imageset_dir, "label_2")
+        self.lyft2kitti_bev_path = os.path.join(self.imageset_dir, "bev_arrays")
 
         if not is_test:
             split_dir = os.path.join('data', 'LYFT', 'ImageSets', split+'.txt')
@@ -55,6 +56,18 @@ class LyftDataset(torch_data.Dataset):
         label_file = os.path.join(self.label_path, '%s.txt' % idx)
         assert os.path.exists(label_file)
         return lyft_utils.read_label(label_file)
+
+    def get_lyft2kitti_bev(self, idx):
+        print("PATH: ", os.path.join(self.lyft2kitti_bev_path, '%s.npy' % idx))
+        bev_file = os.path.join(self.lyft2kitti_bev_path, '%s.npy' % idx)
+        assert os.path.exists(bev_file)
+        bev_2channel = np.load(bev_file)
+        channel, height, width = bev_2channel.shape
+        RGB_Map = np.zeros((3, height, width))
+        RGB_Map[2, :, :] = bev_2channel[0, :, :]
+        RGB_Map[1, :, :] = bev_2channel[1, :, :]
+        RGB_Map[0, :, :] = np.zeros((height, width))
+        return RGB_Map
 
     def __len__(self):
         raise NotImplemented

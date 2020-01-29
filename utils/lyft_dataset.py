@@ -58,7 +58,6 @@ class LyftDataset(torch_data.Dataset):
         return lyft_utils.read_label(label_file)
 
     def get_lyft2kitti_bev(self, idx):
-        print("PATH: ", os.path.join(self.lyft2kitti_bev_path, '%s.npy' % idx))
         bev_file = os.path.join(self.lyft2kitti_bev_path, '%s.npy' % idx)
         assert os.path.exists(bev_file)
         bev_2channel = np.load(bev_file)

@@ -150,31 +150,3 @@ class KittiYOLODataset(KittiDataset):
 
     def __len__(self):
         return len(self.sample_id_list)
-
-class KittiYOLO2WayDataset(KittiDataset):
-    def __init__(self, root_dir, split='sample', folder='sampledata'):
-        super().__init__(root_dir=root_dir, split=split, folder=folder)
-
-        self.sample_id_list = []
-
-        self.sample_id_list = [int(sample_id) for sample_id in self.image_idx_list]
-
-        print('Load TESTING samples from %s' % self.imageset_dir)
-        print('Done: total TESTING samples %d' % len(self.sample_id_list))
-
-    def __getitem__(self, index):
-        sample_id = int(self.sample_id_list[index])
-
-        lidarData = self.get_lidar(sample_id)
-        front_lidar = bev_utils.removePoints(lidarData, cnf.boundary)
-        front_bev = bev_utils.makeBVFeature(front_lidar, cnf.DISCRETIZATION, cnf.boundary)
-
-        back_lidar = bev_utils.removePoints(lidarData, cnf.boundary_back)
-        back_bev = bev_utils.makeBVFeature(back_lidar, cnf.DISCRETIZATION, cnf.boundary_back)
-
-        img_file = os.path.join(self.image_path, '%06d.png' % sample_id)
-
-        return img_file, front_bev, back_bev
-    
-    def __len__(self):
-        return len(self.sample_id_list)

@@ -288,7 +288,7 @@ def non_max_suppression_rotated_bbox(prediction, conf_thres=0.95, nms_thres=0.4)
         score = image_pred[:, 6] * image_pred[:, 7:].max(1)[0]
         # Sort by it
         #image_pred = image_pred[(-score).argsort()]
-        image_pred = image_pred[np.sort(-score)]
+        image_pred = image_pred[np.argsort(-score)]
         class_confs, class_preds = image_pred[:, 7:].max(1, keepdim=True)
         detections = torch.cat((image_pred[:, :7].float(), class_confs.float(), class_preds.float()), 1)
         # Perform non-maximum suppression

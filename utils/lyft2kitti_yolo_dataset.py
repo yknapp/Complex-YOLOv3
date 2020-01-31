@@ -1,5 +1,6 @@
 
 import os
+import sys
 import numpy as np
 import random
 from utils.lyft_dataset import LyftDataset
@@ -10,7 +11,7 @@ import utils.config_lyft as cnf
 import torch
 import torch.nn.functional as F
 
-import cv2
+from unit.lyft2kitti_converter import Lyft2KittiConverter
 
 def resize(image, size):
     image = F.interpolate(image.unsqueeze(0), size=size, mode="nearest").squeeze(0)
@@ -18,7 +19,7 @@ def resize(image, size):
 
 class Lyft2KittiYOLODataset(LyftDataset):
 
-    def __init__(self, root_dir, split='train', mode ='TRAIN', folder=None, data_aug=True, multiscale=False):
+    def __init__(self, root_dir, unit_config_path, unit_checkpoint_path, split='train', mode ='TRAIN', folder=None, data_aug=True, multiscale=False):
         super().__init__(root_dir=root_dir, split=split, folder=folder)
 
         self.split = split
@@ -42,6 +43,20 @@ class Lyft2KittiYOLODataset(LyftDataset):
 
         print('Load %s samples from %s' % (mode, self.imageset_dir))
         print('Done: total %s samples %d' % (mode, len(self.sample_id_list)))
+
+        # initialize UNIT image2image converter
+        self.lyft2kitti_conv = Lyft2KittiConverter(unit_config_path, unit_checkpoint_path)
+
+    def perform_img2img_translation(self, np_img):
+        c, height, width = np_img.shape
+        np_img_input = np.zeros((width, width, 2))
+        np_img_input[:, :, 0] = np_img[0, :, :]
+        np_img_input[:, :, 1] = np_img[1, :, :]
+        np_img_transformed = self.lyft2kitti_conv.transform(np_img_input)
+        np_img_output = np.zeros((3, width, width))
+        np_img_output[0, :, :] = np_img_transformed[0, :, :]
+        np_img_output[1, :, :] = np_img_transformed[1, :, :]
+        return np_img_output
 
     def preprocess_yolo_training_data(self):
         """
@@ -132,9 +147,8 @@ class Lyft2KittiYOLODataset(LyftDataset):
             if self.data_aug and self.mode == 'TRAIN':
                 lidarData, labels[:, 1:] = augUtils.complex_yolo_pc_augmentation(lidarData, labels[:, 1:], True)
 
-            #b = bev_utils.removePoints(lidarData, cnf.boundary)
-            #rgb_map = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
-            rgb_map = self.get_lyft2kitti_bev(sample_id)
+            b = bev_utils.removePoints(lidarData, cnf.boundary)
+            rgb_map = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
             target = bev_utils.build_yolo_target(labels)
             img_file = os.path.join(self.image_path, '%s.png' % sample_id)
 
@@ -156,10 +170,11 @@ class Lyft2KittiYOLODataset(LyftDataset):
             return img_file, img, targets
 
         else:
-            #lidarData = self.get_lidar(sample_id)
-            #b = bev_utils.removePoints(lidarData, cnf.boundary)
-            #rgb_map = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
-            rgb_map = self.get_lyft2kitti_bev(sample_id)
+            lidarData = self.get_lidar(sample_id)
+            b = bev_utils.removePoints(lidarData, cnf.boundary)
+            rgb_map = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
+            #rgb_map = self.get_lyft2kitti_bev(sample_id)
+            rgb_map = self.perform_img2img_translation(rgb_map)
             img_file = os.path.join(self.image_path, '%s.png' % sample_id)
             return img_file, rgb_map
 

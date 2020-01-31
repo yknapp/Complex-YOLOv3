@@ -277,7 +277,6 @@ def non_max_suppression_rotated_bbox(prediction, conf_thres=0.95, nms_thres=0.4)
         Returns detections with shape:
             (x, y, w, l, im, re, object_conf, class_score, class_pred)
     """
-
     output = [None for _ in range(len(prediction))]
     for image_i, image_pred in enumerate(prediction):
         # Filter out confidence scores below threshold
@@ -288,7 +287,8 @@ def non_max_suppression_rotated_bbox(prediction, conf_thres=0.95, nms_thres=0.4)
         # Object confidence times class confidence
         score = image_pred[:, 6] * image_pred[:, 7:].max(1)[0]
         # Sort by it
-        image_pred = image_pred[(-score).argsort()]
+        #image_pred = image_pred[(-score).argsort()]
+        image_pred = image_pred[np.sort(-score)]
         class_confs, class_preds = image_pred[:, 7:].max(1, keepdim=True)
         detections = torch.cat((image_pred[:, :7].float(), class_confs.float(), class_preds.float()), 1)
         # Perform non-maximum suppression

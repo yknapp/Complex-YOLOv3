@@ -97,6 +97,8 @@ if __name__ == "__main__":
     parser.add_argument("--img_size", type=int, default=cnf.BEV_WIDTH, help="size of each image dimension")
     parser.add_argument("--split", type=str, default="valid", help="text file having image lists in dataset")
     parser.add_argument("--folder", type=str, default="training", help="directory name that you downloaded all dataset")
+    parser.add_argument('--unit_config', type=str, help="UNIT net configuration")
+    parser.add_argument('--unit_checkpoint', type=str, help="checkpoint of UNIT autoencoders")
     opt = parser.parse_args()
     print(opt)
 
@@ -111,7 +113,7 @@ if __name__ == "__main__":
     model.eval()
     
     #dataset = LyftYOLODataset(cnf.root_dir, split=opt.split, mode='TEST', folder=opt.folder, data_aug=False)
-    dataset = Lyft2KittiYOLODataset(cnf.root_dir, split=opt.split, mode='TEST', folder=opt.folder, data_aug=False)
+    dataset = Lyft2KittiYOLODataset(cnf.root_dir, unit_config_path=opt.unit_config, unit_checkpoint_path=opt.unit_checkpoint, split=opt.split, mode='TEST', folder=opt.folder, data_aug=False)
     data_loader = torch_data.DataLoader(dataset, 1, shuffle=False)
 
     Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor

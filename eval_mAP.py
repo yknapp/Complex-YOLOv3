@@ -17,13 +17,13 @@ import utils.config_lyft as cnf
 from utils.lyft_yolo_dataset import LyftYOLODataset
 from utils.lyft2kitti_yolo_dataset import Lyft2KittiYOLODataset
 
-def evaluate(model, iou_thres, conf_thres, nms_thres, img_size, batch_size):
+def evaluate(model, iou_thres, conf_thres, nms_thres, img_size, batch_size, unit_config_path, unit_checkpoint_path):
     model.eval()
 
     # Get dataloader
     split='valid'
     #dataset = LyftYOLODataset(cnf.root_dir, split=split, mode='EVAL', folder='training', data_aug=False)
-    dataset = Lyft2KittiYOLODataset(cnf.root_dir, split=split, mode='EVAL', folder='training', data_aug=False)
+    dataset = Lyft2KittiYOLODataset(cnf.root_dir, unit_config_path=unit_config_path, unit_checkpoint_path=unit_checkpoint_path, split=split, mode='EVAL', folder='training', data_aug=False)
     dataloader = torch.utils.data.DataLoader(
         dataset, batch_size=batch_size, shuffle=False, num_workers=1, collate_fn=dataset.collate_fn
     )
@@ -63,6 +63,8 @@ if __name__ == "__main__":
     parser.add_argument("--conf_thres", type=float, default=0.5, help="object confidence threshold")
     parser.add_argument("--nms_thres", type=float, default=0.5, help="iou thresshold for non-maximum suppression")
     parser.add_argument("--img_size", type=int, default=cnf.BEV_WIDTH, help="size of each image dimension")
+    parser.add_argument('--unit_config', type=str, help="UNIT net configuration")
+    parser.add_argument('--unit_checkpoint', type=str, help="checkpoint of UNIT autoencoders")
     opt = parser.parse_args()
     print(opt)
 
@@ -85,6 +87,8 @@ if __name__ == "__main__":
         nms_thres=opt.nms_thres,
         img_size=opt.img_size,
         batch_size=opt.batch_size,
+        unit_config_path=opt.unit_config,
+        unit_checkpoint_path=opt.unit_checkpoint
     )
 
     print("Average Precisions:")

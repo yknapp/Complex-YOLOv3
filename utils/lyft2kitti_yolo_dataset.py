@@ -144,11 +144,9 @@ class Lyft2KittiYOLODataset(LyftDataset):
                 labels[:, 1:] = augUtils.camera_to_lidar_box(labels[:, 1:], calib.V2C, calib.R0,
                                                              calib.P)  # convert rect cam to velo cord
 
-            if self.data_aug and self.mode == 'TRAIN':
-                lidarData, labels[:, 1:] = augUtils.complex_yolo_pc_augmentation(lidarData, labels[:, 1:], True)
-
             b = bev_utils.removePoints(lidarData, cnf.boundary)
             rgb_map = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
+            rgb_map = self.perform_img2img_translation(rgb_map)
             target = bev_utils.build_yolo_target(labels)
             img_file = os.path.join(self.image_path, '%s.png' % sample_id)
 
@@ -173,7 +171,6 @@ class Lyft2KittiYOLODataset(LyftDataset):
             lidarData = self.get_lidar(sample_id)
             b = bev_utils.removePoints(lidarData, cnf.boundary)
             rgb_map = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
-            #rgb_map = self.get_lyft2kitti_bev(sample_id)
             rgb_map = self.perform_img2img_translation(rgb_map)
             img_file = os.path.join(self.image_path, '%s.png' % sample_id)
             return img_file, rgb_map

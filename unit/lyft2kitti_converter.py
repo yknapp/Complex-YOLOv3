@@ -51,13 +51,13 @@ class Lyft2KittiConverter:
             pointcloud = pointcloud.to(dtype=torch.float)
             pointcloud = Variable(pointcloud)
 
-        # Start testing
-        content, _ = self.encode(pointcloud)
+            # Start testing
+            content, _ = self.encode(pointcloud)
 
-        outputs = self.decode(content)
-        outputs = (outputs + 1) / 2.
+            outputs = self.decode(content)
+            outputs = (outputs + 1) / 2.
 
-        # convert to numpy array
-        lidar_bev_output = outputs.data.detach().cpu().numpy()  # to numpy array
+            # convert to numpy array
+            lidar_bev_output = outputs.data.detach().cpu().numpy()[-1, :, :, :]  # to numpy array
 
-        return lidar_bev_output[0, :, :, :]
+            return lidar_bev_output

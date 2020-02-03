@@ -147,6 +147,7 @@ class Lyft2KittiYOLODataset(LyftDataset):
             b = bev_utils.removePoints(lidarData, cnf.boundary)
             rgb_map = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
             rgb_map = self.perform_img2img_translation(rgb_map)
+
             target = bev_utils.build_yolo_target(labels)
             img_file = os.path.join(self.image_path, '%s.png' % sample_id)
 
@@ -178,7 +179,7 @@ class Lyft2KittiYOLODataset(LyftDataset):
     def collate_fn(self, batch):
         paths, imgs, targets = list(zip(*batch))
         # Remove empty placeholder targets
-        targets = [boxes for boxes in targets if boxes is not None]
+        targets = [boxes for boxes in targets if boxes.shape != torch.Size([0])]
         # Add sample index to targets
         for i, boxes in enumerate(targets):
             boxes[:, 0] = i

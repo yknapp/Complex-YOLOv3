@@ -183,7 +183,11 @@ def get_batch_statistics_rotated_bbox(outputs, targets, iou_threshold):
 
         true_positives = np.zeros(pred_boxes.shape[0])
 
-        annotations = targets[targets[:, 0] == sample_i][:, 1:]
+        annotations_ = targets[targets[:, 0] == sample_i]
+        if annotations_.shape != torch.Size([0]):
+            annotations = targets[:, 1:]
+        else:
+            annotations = []
         target_labels = annotations[:, 0] if len(annotations) else []
         if len(annotations):
             detected_boxes = []

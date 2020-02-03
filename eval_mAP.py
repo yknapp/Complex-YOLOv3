@@ -25,7 +25,7 @@ def evaluate(model, iou_thres, conf_thres, nms_thres, img_size, batch_size, unit
     #dataset = LyftYOLODataset(cnf.root_dir, split=split, mode='EVAL', folder='training', data_aug=False)
     dataset = Lyft2KittiYOLODataset(cnf.root_dir, unit_config_path=unit_config_path, unit_checkpoint_path=unit_checkpoint_path, split=split, mode='EVAL', folder='training', data_aug=False)
     dataloader = torch.utils.data.DataLoader(
-        dataset, batch_size=batch_size, shuffle=False, num_workers=1, collate_fn=dataset.collate_fn
+        dataset, batch_size=batch_size, shuffle=False, collate_fn=dataset.collate_fn
     )
 
     Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor

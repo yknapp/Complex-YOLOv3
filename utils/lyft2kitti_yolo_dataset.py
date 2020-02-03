@@ -50,11 +50,11 @@ class Lyft2KittiYOLODataset(LyftDataset):
     def perform_img2img_translation(self, np_img):
         c, height, width = np_img.shape
         np_img_input = np.zeros((width, width, 2))
-        np_img_input[:, :, 0] = np_img[0, :, :]
+        np_img_input[:, :, 0] = np_img[2, :, :]
         np_img_input[:, :, 1] = np_img[1, :, :]
         np_img_transformed = self.lyft2kitti_conv.transform(np_img_input)
         np_img_output = np.zeros((3, width, width))
-        np_img_output[0, :, :] = np_img_transformed[0, :, :]
+        np_img_output[2, :, :] = np_img_transformed[0, :, :]
         np_img_output[1, :, :] = np_img_transformed[1, :, :]
         return np_img_output
 

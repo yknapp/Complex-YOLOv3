@@ -4,14 +4,15 @@ import glob
 import numpy as np
 import cv2
 import torch.utils.data as torch_data
-import utils.kitti_utils as kitti_utils
+import utils.dataset_utils as dataset_utils
 
 class KittiDataset(torch_data.Dataset):
 
-    def __init__(self, root_dir, split='train', folder='testing'):
+    def __init__(self, split='train', folder='testing'):
         self.split = split
 
         is_test = self.split == 'test'
+        root_dir = '/home/user/work/master_thesis/datasets/kitti/kitti'
         self.imageset_dir = os.path.join(root_dir, 'object', folder)
         self.lidar_path = os.path.join(self.imageset_dir, "velodyne")
 
@@ -19,8 +20,16 @@ class KittiDataset(torch_data.Dataset):
         self.calib_path = os.path.join(self.imageset_dir, "calib")
         self.label_path = os.path.join(self.imageset_dir, "label_2")
 
+        self.CLASS_NAME_TO_ID = {
+            'Car': 0,
+            'Pedestrian': 1,
+            'Cyclist': 2,
+            'Van': 0,
+            'Person_sitting': 1
+        }
+
         if not is_test:
-            split_dir = os.path.join('data', 'LYFT', 'ImageSets', split+'.txt')
+            split_dir = os.path.join('data', 'KITTI', 'ImageSets', split+'.txt')
             self.image_idx_list = [x.strip() for x in open(split_dir).readlines()]
         else:
             self.files = sorted(glob.glob("%s/*.bin" % self.lidar_path))
@@ -49,12 +58,12 @@ class KittiDataset(torch_data.Dataset):
     def get_calib(self, idx):
         calib_file = os.path.join(self.calib_path, '%06d.txt' % idx)
         assert os.path.exists(calib_file)
-        return kitti_utils.Calibration(calib_file)
+        return dataset_utils.Calibration(calib_file)
 
     def get_label(self, idx):
         label_file = os.path.join(self.label_path, '%06d.txt' % idx)
         assert os.path.exists(label_file)
-        return kitti_utils.read_label(label_file)
+        return dataset_utils.read_label(label_file)
 
     def __len__(self):
         raise NotImplemented

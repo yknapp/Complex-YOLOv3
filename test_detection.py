@@ -5,19 +5,19 @@ import argparse
 import cv2
 import time
 import torch
+import sys
 
 import utils.utils as utils
 from models import *
 import torch.utils.data as torch_data
 
-import utils.lyft_utils as lyft_utils
-import utils.lyft_aug_utils as aug_utils
-import utils.lyft_bev_utils as bev_utils
-#from utils.kitti_yolo_dataset import KittiYOLODataset
+import utils.dataset_utils as lyft_utils
+import utils.dataset_aug_utils as aug_utils
+import utils.dataset_bev_utils as bev_utils
+from utils.kitti_yolo_dataset import KittiYOLODataset
 from utils.lyft_yolo_dataset import LyftYOLODataset
 from utils.lyft2kitti_yolo_dataset import Lyft2KittiYOLODataset
-#import utils.config as cnf
-import utils.config_lyft as cnf
+import utils.config as cnf
 import utils.mayavi_viewer as mview
 
 def predictions_to_kitti_format(img_detections, calib, img_shape_2d, img_size, RGB_Map=None):
@@ -89,6 +89,7 @@ def predictions_to_kitti_format(img_detections, calib, img_shape_2d, img_size, R
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--dataset", type=str, default="kitti", help="chose dataset (kitti, lyft, lyft2kitti)")
     parser.add_argument("--model_def", type=str, default="config/complex_tiny_yolov3.cfg", help="path to model definition file")
     parser.add_argument("--weights_path", type=str, default="checkpoints/tiny-yolov3_ckpt_epoch-220.pth", help="path to weights file")
     parser.add_argument("--class_path", type=str, default="data/classes.names", help="path to class label file")
@@ -97,8 +98,8 @@ if __name__ == "__main__":
     parser.add_argument("--img_size", type=int, default=cnf.BEV_WIDTH, help="size of each image dimension")
     parser.add_argument("--split", type=str, default="valid", help="text file having image lists in dataset")
     parser.add_argument("--folder", type=str, default="training", help="directory name that you downloaded all dataset")
-    parser.add_argument('--unit_config', type=str, help="UNIT net configuration")
-    parser.add_argument('--unit_checkpoint', type=str, help="checkpoint of UNIT autoencoders")
+    parser.add_argument('--unit_config', type=str, default=None, help="UNIT net configuration")
+    parser.add_argument('--unit_checkpoint', type=str, default=None, help="checkpoint of UNIT autoencoders")
     opt = parser.parse_args()
     print(opt)
 
@@ -111,9 +112,29 @@ if __name__ == "__main__":
     model.load_state_dict(torch.load(opt.weights_path))
     # Eval mode
     model.eval()
-    
-    #dataset = LyftYOLODataset(cnf.root_dir, split=opt.split, mode='TEST', folder=opt.folder, data_aug=False)
-    dataset = Lyft2KittiYOLODataset(cnf.root_dir, unit_config_path=opt.unit_config, unit_checkpoint_path=opt.unit_checkpoint, split=opt.split, mode='TEST', folder=opt.folder, data_aug=False)
+
+    # class names for KITTI ground truth
+    class_name_to_id_kitti = {
+            'Car': 				0,
+            'Pedestrian': 		1,
+            'Cyclist': 			2,
+            'Van': 				0,
+            'Person_sitting': 	1
+    }
+
+    # prepare dataset
+    if opt.dataset == 'kitti':
+        dataset = KittiYOLODataset(split=opt.split, mode='TEST', folder=opt.folder, data_aug=False)
+    elif opt.dataset == 'lyft':
+        dataset = LyftYOLODataset(split=opt.split, mode='TEST', folder=opt.folder, data_aug=False)
+    elif opt.dataset == 'lyft2kitti':
+        if None not in (opt.unit_config, opt.unit_checkpoint):
+            dataset = Lyft2KittiYOLODataset(unit_config_path=opt.unit_config, unit_checkpoint_path=opt.unit_checkpoint, split=opt.split, mode='TEST', folder=opt.folder, data_aug=False)
+        else:
+            print("Program arguments 'unit_config' and 'unit_checkpoint' must be set for dataset Lyft2Kitti")
+            sys.exit()
+    else:
+        print("Unknown dataset '%s'" % opts.dataset)
     data_loader = torch_data.DataLoader(dataset, 1, shuffle=False)
 
     Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
@@ -160,8 +181,8 @@ if __name__ == "__main__":
         img2d = cv2.imread(img_paths[0])
         calib = lyft_utils.Calibration(img_paths[0].replace(".png", ".txt").replace("image_2", "calib"))
         objects_pred = predictions_to_kitti_format(img_detections, calib, img2d.shape, opt.img_size)  
-        
-        img2d = mview.show_image_with_boxes(img2d, objects_pred, calib, False)
+
+        img2d = mview.show_image_with_boxes(img2d, objects_pred, calib, class_name_to_id_kitti, False)
         
         cv2.imshow("bev img", RGB_Map)
         cv2.imshow("img2d", img2d)

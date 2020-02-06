@@ -4,7 +4,7 @@ from __future__ import print_function
 import numpy as np
 import cv2
 import os
-import utils.config_lyft as cnf
+import utils.config as cnf
 
 class Object3d(object):
     ''' 3d object label '''
@@ -12,8 +12,7 @@ class Object3d(object):
         data = label_file_line.split(' ')
         data[1:] = [float(x) for x in data[1:]]
         # extract label, truncation, occlusion
-        self.type = data[0] # 'Car', 'Pedestrian', ...
-        self.cls_id = self.cls_type_to_id(self.type)
+        self.class_name = data[0] # 'Car', 'Pedestrian', ...
         self.truncation = data[1] # truncated pixel ratio [0..1]
         self.occlusion = int(data[2]) # 0=visible, 1=partly occluded, 2=fully occluded, 3=unknown
         self.alpha = data[3] # object observation angle [-pi..pi]
@@ -70,7 +69,7 @@ class Object3d(object):
 
     def print_object(self):
         print('Type, truncation, occlusion, alpha: %s, %d, %d, %f' % \
-            (self.type, self.truncation, self.occlusion, self.alpha))
+              (self.class_name, self.truncation, self.occlusion, self.alpha))
         print('2d bbox (x0,y0,x1,y1): %f, %f, %f, %f' % \
             (self.xmin, self.ymin, self.xmax, self.ymax))
         print('3d bbox h,w,l: %f, %f, %f' % \
@@ -80,7 +79,7 @@ class Object3d(object):
     
     def to_kitti_format(self):
         kitti_str = '%s %.2f %d %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f' \
-                    % (self.type, self.truncation, int(self.occlusion), self.alpha, self.box2d[0], self.box2d[1],
+                    % (self.class_name, self.truncation, int(self.occlusion), self.alpha, self.box2d[0], self.box2d[1],
                        self.box2d[2], self.box2d[3], self.h, self.w, self.l, self.t[0], self.t[1], self.t[2],
                        self.ry, self.score)
         return kitti_str

@@ -3,7 +3,7 @@ import math
 import torch
 import cv2
 import utils.config as cnf
-import utils.kitti_utils as kitti_utils
+import utils.dataset_utils as lyft_utils
 
 def removePoints(PointCloud, BoundaryCond):
     # Boundary condition
@@ -66,12 +66,12 @@ def makeBVFeature(PointCloud_, Discretization, bc):
 
     return RGB_Map
 
-def read_labels_for_bevbox(objects):
+def read_labels_for_bevbox(objects, class_name_to_id_dict):
     bbox_selected = []
     for obj in objects:
-        if obj.cls_id != -1:
+        if obj.class_name in class_name_to_id_dict.keys():
             bbox = []
-            bbox.append(obj.cls_id)
+            bbox.append(class_name_to_id_dict[obj.class_name])
             bbox.extend([obj.t[0], obj.t[1], obj.t[2], obj.h, obj.w, obj.l, obj.ry])
             bbox_selected.append(bbox)
     

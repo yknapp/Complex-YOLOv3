@@ -3,9 +3,9 @@ import os
 import numpy as np
 import random
 from utils.lyft_dataset import LyftDataset
-import utils.lyft_aug_utils as augUtils
-import utils.lyft_bev_utils as bev_utils
-import utils.config_lyft as cnf
+import utils.dataset_aug_utils as augUtils
+import utils.dataset_bev_utils as bev_utils
+import utils.config as cnf
 
 import torch
 import torch.nn.functional as F
@@ -18,8 +18,8 @@ def resize(image, size):
 
 class LyftYOLODataset(LyftDataset):
 
-    def __init__(self, root_dir, split='train', mode ='TRAIN', folder=None, data_aug=True, multiscale=False):
-        super().__init__(root_dir=root_dir, split=split, folder=folder)
+    def __init__(self, split='train', mode ='TRAIN', folder=None, data_aug=True, multiscale=False):
+        super().__init__(split=split, folder=folder)
 
         self.split = split
         self.multiscale = multiscale
@@ -49,16 +49,16 @@ class LyftYOLODataset(LyftDataset):
         Valid sample_id is stored in self.sample_id_list
         """
         for idx in range(0, self.num_samples):
-            sample_id = int(self.image_idx_list[idx])
+            sample_id = self.image_idx_list[idx]
             objects = self.get_label(sample_id)
             calib = self.get_calib(sample_id)
-            labels, noObjectLabels = bev_utils.read_labels_for_bevbox(objects)
+            labels, noObjectLabels = bev_utils.read_labels_for_bevbox(objects, self.CLASS_NAME_TO_ID)
             if not noObjectLabels:
                 labels[:, 1:] = augUtils.camera_to_lidar_box(labels[:, 1:], calib.V2C, calib.R0, calib.P)  # convert rect cam to velo cord
 
             valid_list = []
             for i in range(labels.shape[0]):
-                if int(labels[i, 0]) in cnf.CLASS_NAME_TO_ID.values():
+                if int(labels[i, 0]) in self.CLASS_NAME_TO_ID.values():
                     if self.check_pc_range(labels[i, 1:4]) is True:
                         valid_list.append(labels[i,0])
 
@@ -88,7 +88,7 @@ class LyftYOLODataset(LyftDataset):
             objects = self.get_label(sample_id)   
             calib = self.get_calib(sample_id)
 
-            labels, noObjectLabels = bev_utils.read_labels_for_bevbox(objects)
+            labels, noObjectLabels = bev_utils.read_labels_for_bevbox(objects, self.CLASS_NAME_TO_ID)
     
             if not noObjectLabels:
                 labels[:, 1:] = augUtils.camera_to_lidar_box(labels[:, 1:], calib.V2C, calib.R0, calib.P)  # convert rect cam to velo cord
@@ -128,7 +128,7 @@ class LyftYOLODataset(LyftDataset):
     def collate_fn(self, batch):
         paths, imgs, targets = list(zip(*batch))
         # Remove empty placeholder targets
-        targets = [boxes for boxes in targets if boxes is not None]
+        targets = [boxes for boxes in targets if boxes.shape != torch.Size([0])]
         # Add sample index to targets
         for i, boxes in enumerate(targets):
             boxes[:, 0] = i
@@ -148,33 +148,5 @@ class LyftYOLODataset(LyftDataset):
 
         return images, targets
 
-    def __len__(self):
-        return len(self.sample_id_list)
-
-class LyftYOLO2WayDataset(LyftDataset):
-    def __init__(self, root_dir, split='sample', folder='sampledata'):
-        super().__init__(root_dir=root_dir, split=split, folder=folder)
-
-        self.sample_id_list = []
-
-        self.sample_id_list = self.image_idx_list
-
-        print('Load TESTING samples from %s' % self.imageset_dir)
-        print('Done: total TESTING samples %d' % len(self.sample_id_list))
-
-    def __getitem__(self, index):
-        sample_id = int(self.sample_id_list[index])
-
-        lidarData = self.get_lidar(sample_id)
-        front_lidar = bev_utils.removePoints(lidarData, cnf.boundary)
-        front_bev = bev_utils.makeBVFeature(front_lidar, cnf.DISCRETIZATION, cnf.boundary)
-
-        back_lidar = bev_utils.removePoints(lidarData, cnf.boundary_back)
-        back_bev = bev_utils.makeBVFeature(back_lidar, cnf.DISCRETIZATION, cnf.boundary_back)
-
-        img_file = os.path.join(self.image_path, '%s.png' % sample_id)
-
-        return img_file, front_bev, back_bev
-    
     def __len__(self):
         return len(self.sample_id_list)

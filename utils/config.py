@@ -1,17 +1,8 @@
 import torch
 import numpy as np
 
-root_dir = '/home/user/datasets/kitti/kitti'
-
 class_list = ["Car", "Pedestrian", "Cyclist"]
-
-CLASS_NAME_TO_ID = {
-	'Car': 				0,
-	'Pedestrian': 		1,
-	'Cyclist': 			2,
-	'Van': 				0,
-	'Person_sitting': 	1,
-}
+colors = [[0, 255, 255], [0, 0, 255], [255, 0, 0]]
 
 # Front side (of vehicle) Point Cloud boundary for BEV
 boundary = {
@@ -23,26 +14,12 @@ boundary = {
     "maxZ": 1.27
 }
 
-# Back back (of vehicle) Point Cloud boundary for BEV
-boundary_back = {
-    "minX": -50,
-    "maxX": 0,
-    "minY": -25,
-    "maxY": 25,
-    "minZ": -2.73,
-    "maxZ": 1.27
-}
-
-#BEV_WIDTH = 608 # across y axis -25m ~ 25m
-BEV_WIDTH = 480  # across y axis -25m ~ 25m
-#BEV_HEIGHT = 608 # across x axis 0m ~ 50m
-BEV_HEIGHT = 480  # across x axis 0m ~ 50m
+BEV_WIDTH = 480
+BEV_HEIGHT = 480
 
 DISCRETIZATION = (boundary["maxX"] - boundary["minX"])/BEV_HEIGHT
 
-colors = [[0, 255, 255], [0, 0, 255], [255, 0, 0]]
-
-# Following parameters are calculated as an average from KITTI dataset for simplicity
+# Following parameters are calculated as an average from KITTI dataset for simplicity, which are used at training for augmentation uses
 #####################################################################################
 Tr_velo_to_cam = np.array([
 		[7.49916597e-03, -9.99971248e-01, -8.65110297e-04, -6.71807577e-03],

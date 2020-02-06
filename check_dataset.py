@@ -3,24 +3,51 @@ from __future__ import division
 import numpy as np
 import cv2
 import torch
+import sys
 
-import utils.kitti_bev_utils as bev_utils
+import utils.dataset_bev_utils as bev_utils
 from utils.kitti_yolo_dataset import KittiYOLODataset
+from utils.lyft_yolo_dataset import LyftYOLODataset
+from utils.lyft2kitti_yolo_dataset import Lyft2KittiYOLODataset
 from torch.utils.data import DataLoader
 import utils.config as cnf
 
 if __name__ == "__main__":
+    dataset = 'lyft2kitti'  # kitti, lyft or lyft2kitti
+
+    # unit files for lyft2kitti
+    unit_config = '/home/user/work/master_thesis/code/UNIT/outputs/unit_bev_lyft2kitti_2channel_folder_8/config.yaml'
+    unit_checkpoint = '/home/user/work/master_thesis/code/UNIT/outputs/unit_bev_lyft2kitti_2channel_folder_8/checkpoints/gen_00010000.pt'
 
     img_size=cnf.BEV_WIDTH
 
     # Get dataloader
-    dataset = KittiYOLODataset(
-        cnf.root_dir,
-        split='valid',
-        mode='TRAIN',
-        folder='training',
-        data_aug=True,
-    )
+    if dataset == 'kitti':
+        dataset = KittiYOLODataset(
+            split='valid',
+            mode='TRAIN',
+            folder='training',
+            data_aug=True,
+        )
+    elif dataset == 'lyft':
+        dataset = LyftYOLODataset(
+            split='valid',
+            mode='TRAIN',
+            folder='training',
+            data_aug=True,
+        )
+    elif dataset == 'lyft2kitti':
+        dataset = Lyft2KittiYOLODataset(
+            unit_config_path=unit_config,
+            unit_checkpoint_path=unit_checkpoint,
+            split='valid',
+            mode='TRAIN',
+            folder='training',
+            data_aug=True,
+        )
+    else:
+        print("Unknown dataset '%s'" % dataset)
+        sys.exit()
 
     # Load Dataset
     dataloader = DataLoader(

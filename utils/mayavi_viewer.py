@@ -2,9 +2,9 @@ import numpy as np
 import mayavi.mlab as mlab
 import cv2
 #import utils.kitti_utils as kitti_utils
-import utils.lyft_utils as lyft_utils
+import utils.dataset_utils as lyft_utils
 #import utils.config as cnf
-import utils.config_lyft as cnf
+import utils.config as cnf
 
 def draw_lidar_simple(pc, color=None):
     ''' Draw lidar points. simplest set up. '''
@@ -131,17 +131,18 @@ def get_lidar_in_image_fov(pc_velo, calib, xmin, ymin, xmax, ymax,
     else:
         return imgfov_pc_velo
 
-def show_image_with_boxes(img, objects, calib, show3d=False):
+def show_image_with_boxes(img, objects, calib, class_name_to_id, show3d=False):
     ''' Show image with 2D bounding boxes '''
 
     img2 = np.copy(img) # for 3d bbox
     for obj in objects:
-        if obj.type=='DontCare':continue
+        if obj.class_name=='DontCare':continue
         #cv2.rectangle(img2, (int(obj.xmin),int(obj.ymin)),
         #    (int(obj.xmax),int(obj.ymax)), (0,255,0), 2)
         box3d_pts_2d, box3d_pts_3d = lyft_utils.compute_box_3d(obj, calib.P)
         if box3d_pts_2d is not None:
-            img2 = lyft_utils.draw_projected_box3d(img2, box3d_pts_2d, cnf.colors[obj.cls_id])
+            class_id = class_name_to_id[obj.class_name]
+            img2 = lyft_utils.draw_projected_box3d(img2, box3d_pts_2d, cnf.colors[class_id])
     if show3d:
         cv2.imshow("img", img2)
     return img2

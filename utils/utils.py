@@ -7,9 +7,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 from shapely.geometry import Polygon
-import utils.config_lyft as cnf
+import utils.config as cnf
 #import utils.kitti_bev_utils as bev_utils
-import utils.lyft_bev_utils as bev_utils
+import utils.dataset_bev_utils as bev_utils
 
 def convert_format(boxes_array):
     """

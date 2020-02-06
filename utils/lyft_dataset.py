@@ -4,20 +4,28 @@ import glob
 import numpy as np
 import cv2
 import torch.utils.data as torch_data
-import utils.lyft_utils as lyft_utils
+import utils.dataset_utils as lyft_utils
 
 class LyftDataset(torch_data.Dataset):
 
-    def __init__(self, root_dir, split='train', folder='testing'):
+    def __init__(self, split='train', folder='testing'):
         self.split = split
 
         is_test = self.split == 'test'
+        root_dir = '/home/user/work/master_thesis/datasets/lyft_kitti'
         self.imageset_dir = os.path.join(root_dir, 'object', folder)
         self.lidar_path = os.path.join(self.imageset_dir, "velodyne")
 
         self.image_path = os.path.join(self.imageset_dir, "image_2")
         self.calib_path = os.path.join(self.imageset_dir, "calib")
         self.label_path = os.path.join(self.imageset_dir, "label_2")
+
+        self.CLASS_NAME_TO_ID = {
+            'car': 				    0,
+            'pedestrian': 		    1,
+            'bicycle': 			    2,
+            'emergency_vehicle': 	0
+        }
 
         if not is_test:
             split_dir = os.path.join('data', 'LYFT', 'ImageSets', split+'.txt')

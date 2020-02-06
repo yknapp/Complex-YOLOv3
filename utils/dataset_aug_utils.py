@@ -1,11 +1,11 @@
 
-# File Name : lyft_aug_utils.py
+# File Name : dataset_aug_utils.py
 # Source : https://github.com/jeasinema/VoxelNet-tensorflow/blob/master/utils/utils.py
 
 import numpy as np
 import math
 import cv2
-import utils.config_lyft as cnf
+import utils.config as cnf
 
 def angle_in_limit(angle):
 	# To limit the angle in -pi/2 - pi/2

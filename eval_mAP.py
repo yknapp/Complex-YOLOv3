@@ -12,18 +12,31 @@ from torch.autograd import Variable
 import torch.optim as optim
 
 #import utils.config as cnf
-import utils.config_lyft as cnf
-#from utils.kitti_yolo_dataset import KittiYOLODataset
+import utils.config as cnf
+from utils.kitti_yolo_dataset import KittiYOLODataset
 from utils.lyft_yolo_dataset import LyftYOLODataset
 from utils.lyft2kitti_yolo_dataset import Lyft2KittiYOLODataset
 
-def evaluate(model, iou_thres, conf_thres, nms_thres, img_size, batch_size, unit_config_path, unit_checkpoint_path):
+def evaluate(dataset_name, model, iou_thres, conf_thres, nms_thres, img_size, batch_size, unit_config_path, unit_checkpoint_path):
     model.eval()
 
     # Get dataloader
     split='valid'
-    #dataset = LyftYOLODataset(cnf.root_dir, split=split, mode='EVAL', folder='training', data_aug=False)
-    dataset = Lyft2KittiYOLODataset(cnf.root_dir, unit_config_path=unit_config_path, unit_checkpoint_path=unit_checkpoint_path, split=split, mode='EVAL', folder='training', data_aug=False)
+
+    # prepare dataset
+    if opt.dataset == 'kitti':
+        dataset = KittiYOLODataset(split=split, mode='EVAL', folder='training', data_aug=False)
+    elif opt.dataset == 'lyft':
+        dataset = LyftYOLODataset(split=split, mode='EVAL', folder='training', data_aug=False)
+    elif opt.dataset == 'lyft2kitti':
+        if None not in (opt.unit_config, opt.unit_checkpoint):
+            dataset = Lyft2KittiYOLODataset(unit_config_path=unit_config_path, unit_checkpoint_path=unit_checkpoint_path, split=split, mode='EVAL', folder='training', data_aug=False)
+        else:
+            print("Program arguments 'unit_config' and 'unit_checkpoint' must be set for dataset Lyft2Kitti")
+            sys.exit()
+    else:
+        print("Unknown dataset '%s'" % opts.dataset)
+
     dataloader = torch.utils.data.DataLoader(
         dataset, batch_size=batch_size, shuffle=False, collate_fn=dataset.collate_fn
     )
@@ -55,6 +68,7 @@ def evaluate(model, iou_thres, conf_thres, nms_thres, img_size, batch_size, unit
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--dataset", type=str, default="kitti", help="chose dataset (kitti, lyft, lyft2kitti)")
     parser.add_argument("--batch_size", type=int, default=10, help="size of each image batch")
     parser.add_argument("--model_def", type=str, default="config/complex_tiny_yolov3.cfg", help="path to model definition file")
     parser.add_argument("--weights_path", type=str, default="checkpoints/tiny-yolov3_ckpt_epoch-220.pth", help="path to weights file")
@@ -70,8 +84,6 @@ if __name__ == "__main__":
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    #data_config = parse_data_config(opt.data_config)
-    #class_names = load_classes(data_config["names"])
     class_names = load_classes(opt.class_path)
 
     # Initiate model
@@ -81,6 +93,7 @@ if __name__ == "__main__":
 
     print("Compute mAP...")
     precision, recall, AP, f1, ap_class = evaluate(
+        opt.dataset,
         model,
         iou_thres=opt.iou_thres,
         conf_thres=opt.conf_thres,

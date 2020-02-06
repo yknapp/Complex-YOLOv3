@@ -3,8 +3,8 @@ import os
 import numpy as np
 import random
 from utils.kitti_dataset import KittiDataset
-import utils.kitti_aug_utils as augUtils
-import utils.kitti_bev_utils as bev_utils
+import utils.dataset_aug_utils as augUtils
+import utils.dataset_bev_utils as bev_utils
 import utils.config as cnf
 
 import torch
@@ -18,8 +18,8 @@ def resize(image, size):
 
 class KittiYOLODataset(KittiDataset):
 
-    def __init__(self, root_dir, split='train', mode ='TRAIN', folder=None, data_aug=True, multiscale=False):
-        super().__init__(root_dir=root_dir, split=split, folder=folder)
+    def __init__(self, split='train', mode ='TRAIN', folder=None, data_aug=True, multiscale=False):
+        super().__init__(split=split, folder=folder)
 
         self.split = split
         self.multiscale = multiscale
@@ -52,13 +52,13 @@ class KittiYOLODataset(KittiDataset):
             sample_id = int(self.image_idx_list[idx])
             objects = self.get_label(sample_id)
             calib = self.get_calib(sample_id)
-            labels, noObjectLabels = bev_utils.read_labels_for_bevbox(objects)
+            labels, noObjectLabels = bev_utils.read_labels_for_bevbox(objects, self.CLASS_NAME_TO_ID)
             if not noObjectLabels:
                 labels[:, 1:] = augUtils.camera_to_lidar_box(labels[:, 1:], calib.V2C, calib.R0, calib.P)  # convert rect cam to velo cord
 
             valid_list = []
             for i in range(labels.shape[0]):
-                if int(labels[i, 0]) in cnf.CLASS_NAME_TO_ID.values():
+                if int(labels[i, 0]) in self.CLASS_NAME_TO_ID.values():
                     if self.check_pc_range(labels[i, 1:4]) is True:
                         valid_list.append(labels[i,0])
 
@@ -88,7 +88,7 @@ class KittiYOLODataset(KittiDataset):
             objects = self.get_label(sample_id)   
             calib = self.get_calib(sample_id)
 
-            labels, noObjectLabels = bev_utils.read_labels_for_bevbox(objects)
+            labels, noObjectLabels = bev_utils.read_labels_for_bevbox(objects, self.CLASS_NAME_TO_ID)
     
             if not noObjectLabels:
                 labels[:, 1:] = augUtils.camera_to_lidar_box(labels[:, 1:], calib.V2C, calib.R0, calib.P)  # convert rect cam to velo cord
@@ -128,7 +128,7 @@ class KittiYOLODataset(KittiDataset):
     def collate_fn(self, batch):
         paths, imgs, targets = list(zip(*batch))
         # Remove empty placeholder targets
-        targets = [boxes for boxes in targets if boxes is not None]
+        targets = [boxes for boxes in targets if boxes.shape != torch.Size([0])]
         # Add sample index to targets
         for i, boxes in enumerate(targets):
             boxes[:, 0] = i

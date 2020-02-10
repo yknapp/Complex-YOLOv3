@@ -13,9 +13,10 @@ import torch.optim as optim
 
 #import utils.config as cnf
 import utils.config as cnf
-from utils.kitti_yolo_dataset import KittiYOLODataset
-from utils.lyft_yolo_dataset import LyftYOLODataset
-from utils.lyft2kitti_yolo_dataset import Lyft2KittiYOLODataset
+#from utils.kitti_yolo_dataset import KittiYOLODataset
+#from utils.lyft_yolo_dataset import LyftYOLODataset
+#from utils.lyft2kitti_yolo_dataset import Lyft2KittiYOLODataset
+#from utils.lyft2kitti_yolo_dataset2 import Lyft2KittiYOLODataset2
 
 def evaluate(dataset_name, model, iou_thres, conf_thres, nms_thres, img_size, batch_size, unit_config_path, unit_checkpoint_path):
     model.eval()
@@ -25,15 +26,21 @@ def evaluate(dataset_name, model, iou_thres, conf_thres, nms_thres, img_size, ba
 
     # prepare dataset
     if opt.dataset == 'kitti':
+        from utils.kitti_yolo_dataset import KittiYOLODataset
         dataset = KittiYOLODataset(split=split, mode='EVAL', folder='training', data_aug=False)
     elif opt.dataset == 'lyft':
+        from utils.lyft_yolo_dataset import LyftYOLODataset
         dataset = LyftYOLODataset(split=split, mode='EVAL', folder='training', data_aug=False)
     elif opt.dataset == 'lyft2kitti':
+        from utils.lyft2kitti_yolo_dataset import Lyft2KittiYOLODataset
         if None not in (opt.unit_config, opt.unit_checkpoint):
             dataset = Lyft2KittiYOLODataset(unit_config_path=unit_config_path, unit_checkpoint_path=unit_checkpoint_path, split=split, mode='EVAL', folder='training', data_aug=False)
         else:
             print("Program arguments 'unit_config' and 'unit_checkpoint' must be set for dataset Lyft2Kitti")
             sys.exit()
+    elif opt.dataset == 'lyft2kitti2':
+        from utils.lyft2kitti_yolo_dataset2 import Lyft2KittiYOLODataset2
+        dataset = Lyft2KittiYOLODataset2(split=split, mode='EVAL', folder='training', data_aug=False)
     else:
         print("Unknown dataset '%s'" % opts.dataset)
 

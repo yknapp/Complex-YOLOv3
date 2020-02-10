@@ -49,7 +49,7 @@ if __name__ == "__main__":
         split='train',
         mode='TRAIN',
         folder='training',
-        data_aug=True,
+        data_aug=False,
         multiscale=opt.multiscale_training
     )
 

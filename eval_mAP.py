@@ -38,7 +38,8 @@ def evaluate(dataset_name, model, iou_thres, conf_thres, nms_thres, img_size, ba
         from utils.lyft2kitti_yolo_dataset2 import Lyft2KittiYOLODataset2
         dataset = Lyft2KittiYOLODataset2(split=split, mode='EVAL', folder='training', data_aug=False)
     else:
-        print("Unknown dataset '%s'" % opts.dataset)
+        print("Error: Unknown dataset '%s'" % opt.dataset)
+        sys.exit()
 
     dataloader = torch.utils.data.DataLoader(
         dataset, batch_size=batch_size, shuffle=False, collate_fn=dataset.collate_fn

@@ -5,8 +5,8 @@ import utils.dataset_bev_utils as bev_utils
 
 from unit.lyft2kitti_converter import Lyft2KittiConverter
 
-UNIT_CONFIG_PATH = '/home/user/work/master_thesis/code/UNIT/outputs/unit_bev_lyft2kitti_2channel_folder_8/config.yaml'
-UNIT_CHECKPOINT_PATH = '/home/user/work/master_thesis/code/UNIT/outputs/unit_bev_lyft2kitti_2channel_folder_8/checkpoints/gen_00010000.pt'
+UNIT_CONFIG_PATH = '/home/user/work/master_thesis/code/UNIT/outputs/unit_bev_lyft2kitti_2channel_folder/config.yaml'
+UNIT_CHECKPOINT_PATH = '/home/user/work/master_thesis/code/UNIT/outputs/unit_bev_lyft2kitti_2channel_folder/checkpoints/gen_00020500.pt'
 CHOSEN_EVAL_FILES_PATH = 'data/LYFT/ImageSets/valid.txt'
 BEV_OUTPUT_PATH = '/home/user/work/master_thesis/datasets/lyft_kitti/object/training/bev'
 LYFT_LIDAR_PATH = '/home/user/work/master_thesis/datasets/lyft_kitti/object/training/velodyne'

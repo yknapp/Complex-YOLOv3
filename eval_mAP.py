@@ -13,10 +13,6 @@ import torch.optim as optim
 
 #import utils.config as cnf
 import utils.config as cnf
-#from utils.kitti_yolo_dataset import KittiYOLODataset
-#from utils.lyft_yolo_dataset import LyftYOLODataset
-#from utils.lyft2kitti_yolo_dataset import Lyft2KittiYOLODataset
-#from utils.lyft2kitti_yolo_dataset2 import Lyft2KittiYOLODataset2
 
 def evaluate(dataset_name, model, iou_thres, conf_thres, nms_thres, img_size, batch_size, unit_config_path, unit_checkpoint_path):
     model.eval()

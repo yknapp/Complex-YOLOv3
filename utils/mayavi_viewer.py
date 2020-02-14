@@ -2,7 +2,7 @@ import numpy as np
 import mayavi.mlab as mlab
 import cv2
 #import utils.kitti_utils as kitti_utils
-import utils.dataset_utils as lyft_utils
+import utils.dataset_utils as dataset_utils
 #import utils.config as cnf
 import utils.config as cnf
 
@@ -139,10 +139,10 @@ def show_image_with_boxes(img, objects, calib, class_name_to_id, show3d=False):
         if obj.class_name=='DontCare':continue
         #cv2.rectangle(img2, (int(obj.xmin),int(obj.ymin)),
         #    (int(obj.xmax),int(obj.ymax)), (0,255,0), 2)
-        box3d_pts_2d, box3d_pts_3d = lyft_utils.compute_box_3d(obj, calib.P)
+        box3d_pts_2d, box3d_pts_3d = dataset_utils.compute_box_3d(obj, calib.P)
         if box3d_pts_2d is not None:
             class_id = class_name_to_id[obj.class_name]
-            img2 = lyft_utils.draw_projected_box3d(img2, box3d_pts_2d, cnf.colors[class_id])
+            img2 = dataset_utils.draw_projected_box3d(img2, box3d_pts_2d, cnf.colors[class_id])
     if show3d:
         cv2.imshow("img", img2)
     return img2
@@ -164,11 +164,11 @@ def show_lidar_with_boxes(pc_velo, objects, calib,
 
         if obj.type=='DontCare':continue
         # Draw 3d bounding box
-        box3d_pts_2d, box3d_pts_3d = lyft_utils.compute_box_3d(obj, calib.P)
+        box3d_pts_2d, box3d_pts_3d = dataset_utils.compute_box_3d(obj, calib.P)
         box3d_pts_3d_velo = calib.project_rect_to_velo(box3d_pts_3d)
 
         # Draw heading arrow
-        ori3d_pts_2d, ori3d_pts_3d = lyft_utils.compute_orientation_3d(obj, calib.P)
+        ori3d_pts_2d, ori3d_pts_3d = dataset_utils.compute_orientation_3d(obj, calib.P)
         ori3d_pts_3d_velo = calib.project_rect_to_velo(ori3d_pts_3d)
         x1,y1,z1 = ori3d_pts_3d_velo[0,:]
         x2,y2,z2 = ori3d_pts_3d_velo[1,:]

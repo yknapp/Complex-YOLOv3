@@ -24,8 +24,6 @@ class KittiDataset(torch_data.Dataset):
             'Car':              0,
             'Pedestrian':       1,
             'Cyclist':          2,
-            'Van':              0,
-            'Person_sitting':   1
         }
 
         if not is_test:

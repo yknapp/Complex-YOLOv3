@@ -23,8 +23,7 @@ class LyftDataset(torch_data.Dataset):
         self.CLASS_NAME_TO_ID = {
             'car': 				    0,
             'pedestrian': 		    1,
-            'bicycle': 			    2,
-            'emergency_vehicle': 	0
+            'bicycle': 			    2
         }
 
         if not is_test:

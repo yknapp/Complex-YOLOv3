@@ -30,22 +30,6 @@ class KittiObject3d(object):
         self.level_str = None
         self.level = self.get_obj_level()
 
-    def cls_type_to_id(self, cls_type):
-        # Car and Van ==> Car class
-        # Pedestrian and Person_Sitting ==> Pedestrian Class
-        CLASS_NAME_TO_ID = {
-            'car': 0,
-            'pedestrian': 1,
-            'bicycle': 2,
-            'bus': -1,
-            'emergency_vehicle': 0,
-            'truck': -1,
-            'motorcycle': -1
-        }
-        if cls_type not in CLASS_NAME_TO_ID.keys():
-            return -1
-        return CLASS_NAME_TO_ID[cls_type]
-
     def get_obj_level(self):
         height = float(self.box2d[3]) - float(self.box2d[1]) + 1
 

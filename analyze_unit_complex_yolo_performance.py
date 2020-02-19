@@ -38,7 +38,7 @@ def main():
     #parser.add_argument('--evaluation_file', type=str, default=None, help="file containing all ComplexYOLO evaluation results")
     #opts = parser.parse_args()
     #evaluation_file = "/home/user/work/master_thesis/code/UNIT/outputs/unit_bev_new_lyft2kitti_2channel_folder_2/unit_bev_new_lyft2kitti_2channel_folder_2.txt"
-    evaluation_file = "/home/user/work/master_thesis/code/UNIT/outputs/unit_bev_new_lyft2kitti_2channel_folder/unit_bev_new_lyft2kitti_2channel_folder.txt"
+    evaluation_file = "/home/user/work/master_thesis/code/UNIT/outputs/unit_bev_new_lyft2kitti_2channel_folder_2/unit_bev_new_lyft2kitti_2channel_folder_2.txt"
 
     file_content = read_txt_file(evaluation_file)
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-unit_model_folder="unit_bev_new_lyft2kitti_2channel_folder_3"
+unit_model_folder="unit_bev_new_lyft2kitti_2channel_folder_2"
 unit_model_dir="/home/user/work/master_thesis/code/UNIT/outputs/$unit_model_folder"
 output_file="$unit_model_dir/$unit_model_folder.txt"
 "" > $output_file

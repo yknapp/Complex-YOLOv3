@@ -5,6 +5,8 @@ import utils.dataset_bev_utils as bev_utils
 import utils.dataset_aug_utils as aug_utils
 import cv2
 import matplotlib.pyplot as plt
+import object
+import utils.calibration as calibration
 
 BEV_DATASET_PATH = '/home/user/work/master_thesis/datasets/lyft_kitti/object/training/bev_arrays'
 LABEL_PATH = '/home/user/work/master_thesis/datasets/lyft_kitti/object/training/label_2'
@@ -21,13 +23,15 @@ BEV_HEIGHT = 480
 def get_label(idx):
     label_file = os.path.join(LABEL_PATH, '%s.txt' % idx)
     assert os.path.exists(label_file)
-    return dataset_utils.read_label(label_file)
+    lines = [line.rstrip() for line in open(label_file)]
+    objects = [object.KittiObject3d(line) for line in lines]
+    return objects
 
 
 def get_calib(idx):
     calib_file = os.path.join(CALIB_PATH, '%s.txt' % idx)
     assert os.path.exists(calib_file)
-    return dataset_utils.Calibration(calib_file)
+    return calibration.KittiCalibration(calib_file)
 
 
 def load_bevs(filename):

@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 import utils.config as cnf
 
 if __name__ == "__main__":
-    dataset = 'lyft2kitti'  # kitti, lyft or lyft2kitti
+    dataset = 'kitti'  # kitti, lyft or lyft2kitti
 
     # unit files for lyft2kitti
     unit_config = '/home/user/work/master_thesis/code/UNIT/outputs/unit_bev_lyft2kitti_2channel_folder_8/config.yaml'

@@ -4,7 +4,9 @@ import glob
 import numpy as np
 import cv2
 import torch.utils.data as torch_data
-import utils.dataset_utils as lyft_utils
+import utils.dataset_utils as dataset_utils
+import utils.calibration as calibration
+import utils.object as object
 
 class Lyft2KittiDataset(torch_data.Dataset):
 
@@ -58,12 +60,14 @@ class Lyft2KittiDataset(torch_data.Dataset):
     def get_calib(self, idx):
         calib_file = os.path.join(self.calib_path, '%s.txt' % idx)
         assert os.path.exists(calib_file)
-        return lyft_utils.Calibration(calib_file)
+        return calibration.KittiCalibration(calib_file)
 
     def get_label(self, idx):
         label_file = os.path.join(self.label_path, '%s.txt' % idx)
         assert os.path.exists(label_file)
-        return lyft_utils.read_label(label_file)
+        lines = [line.rstrip() for line in open(label_file)]
+        objects = [object.KittiObject3d(line) for line in lines]
+        return objects
 
     def get_bev(self, idx):
         bev_file = os.path.join(self.bev_path, '%s.npy' % idx)

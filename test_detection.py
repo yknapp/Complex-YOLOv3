@@ -11,12 +11,14 @@ import utils.utils as utils
 from models import *
 import torch.utils.data as torch_data
 
-import utils.dataset_utils as lyft_utils
+import utils.dataset_utils as dataset_utils
 import utils.dataset_aug_utils as aug_utils
 import utils.dataset_bev_utils as bev_utils
 from utils.kitti_yolo_dataset import KittiYOLODataset
 from utils.lyft_yolo_dataset import LyftYOLODataset
 from utils.lyft2kitti_yolo_dataset import Lyft2KittiYOLODataset
+from utils.calibration import KittiCalibration
+import utils.object as object
 import utils.config as cnf
 import utils.mayavi_viewer as mview
 
@@ -47,12 +49,20 @@ def predictions_to_kitti_format(img_detections, calib, img_shape_2d, img_size, R
         else:str = "DontCare"
         line = '%s -1 -1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0' % str
 
-        obj = lyft_utils.Object3d(line)
+        if opt.dataset in ('kitti', 'lyft', 'lyft2kitti'):
+            obj = object.KittiObject3d(line)
+        elif opt.dataset == 'audi':
+            # TODO: import calibration for audi
+            pass
+        else:
+            print("Error: Unknown dataset '%s'" % opt.dataset)
+            sys.exit()
+
         obj.t = l[1:4]
         obj.h,obj.w,obj.l = l[4:7]
         obj.ry = np.arctan2(math.sin(l[7]), math.cos(l[7]))
     
-        _, corners_3d = lyft_utils.compute_box_3d(obj, calib.P)
+        _, corners_3d = dataset_utils.compute_box_3d(obj, calib.P)
         corners3d.append(corners_3d)
         objects_new.append(obj)
 
@@ -78,7 +88,7 @@ def predictions_to_kitti_format(img_detections, calib, img_shape_2d, img_size, R
         obj.box2d = img_boxes[i, :]
 
     if RGB_Map is not None:
-        labels, noObjectLabels = lyft_utils.read_labels_for_bevbox(objects_new)
+        labels, noObjectLabels = dataset_utils.read_labels_for_bevbox(objects_new)
         if not noObjectLabels:
             labels[:, 1:] = aug_utils.camera_to_lidar_box(labels[:, 1:], calib.V2C, calib.R0, calib.P) # convert rect cam to velo cord
 
@@ -134,7 +144,7 @@ if __name__ == "__main__":
             print("Program arguments 'unit_config' and 'unit_checkpoint' must be set for dataset Lyft2Kitti")
             sys.exit()
     else:
-        print("Unknown dataset '%s'" % opts.dataset)
+        print("Unknown dataset '%s'" % opt.dataset)
     data_loader = torch_data.DataLoader(dataset, 1, shuffle=False)
 
     Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
@@ -179,7 +189,17 @@ if __name__ == "__main__":
                 bev_utils.drawRotatedBox(RGB_Map, x, y, w, l, yaw, cnf.colors[int(cls_pred)])
 
         img2d = cv2.imread(img_paths[0])
-        calib = lyft_utils.Calibration(img_paths[0].replace(".png", ".txt").replace("image_2", "calib"))
+
+        if opt.dataset in ('kitti', 'lyft', 'lyft2kitti'):
+            calib = KittiCalibration(img_paths[0].replace(".png", ".txt").replace("image_2", "calib"))
+        elif opt.dataset == 'audi':
+            # TODO: import calibration for audi
+            pass
+        else:
+            print("Error: Unknown dataset '%s'" % opt.dataset)
+            sys.exit()
+
+
         objects_pred = predictions_to_kitti_format(img_detections, calib, img2d.shape, opt.img_size)  
 
         img2d = mview.show_image_with_boxes(img2d, objects_pred, calib, class_name_to_id_kitti, False)

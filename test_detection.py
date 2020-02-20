@@ -17,7 +17,8 @@ import utils.dataset_bev_utils as bev_utils
 from utils.kitti_yolo_dataset import KittiYOLODataset
 from utils.lyft_yolo_dataset import LyftYOLODataset
 from utils.lyft2kitti_yolo_dataset import Lyft2KittiYOLODataset
-from utils.calibration import KittiCalibration
+from utils.audi_yolo_dataset import AudiYOLODataset
+from utils.calibration import KittiCalibration, AudiCalibration
 import utils.object as object
 import utils.config as cnf
 import utils.mayavi_viewer as mview
@@ -49,15 +50,7 @@ def predictions_to_kitti_format(img_detections, calib, img_shape_2d, img_size, R
         else:str = "DontCare"
         line = '%s -1 -1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0' % str
 
-        if opt.dataset in ('kitti', 'lyft', 'lyft2kitti'):
-            obj = object.KittiObject3d(line)
-        elif opt.dataset == 'audi':
-            # TODO: import calibration for audi
-            pass
-        else:
-            print("Error: Unknown dataset '%s'" % opt.dataset)
-            sys.exit()
-
+        obj = object.KittiObject3d(line)
         obj.t = l[1:4]
         obj.h,obj.w,obj.l = l[4:7]
         obj.ry = np.arctan2(math.sin(l[7]), math.cos(l[7]))
@@ -143,8 +136,12 @@ if __name__ == "__main__":
         else:
             print("Program arguments 'unit_config' and 'unit_checkpoint' must be set for dataset Lyft2Kitti")
             sys.exit()
+    elif opt.dataset == 'audi':
+        dataset = AudiYOLODataset(split=opt.split, mode='TEST', folder=opt.folder, data_aug=False)
     else:
         print("Unknown dataset '%s'" % opt.dataset)
+        sys.exit()
+
     data_loader = torch_data.DataLoader(dataset, 1, shuffle=False)
 
     Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
@@ -193,19 +190,17 @@ if __name__ == "__main__":
         if opt.dataset in ('kitti', 'lyft', 'lyft2kitti'):
             calib = KittiCalibration(img_paths[0].replace(".png", ".txt").replace("image_2", "calib"))
         elif opt.dataset == 'audi':
-            # TODO: import calibration for audi
-            pass
+            calib = AudiCalibration(dataset.calib_path)
         else:
             print("Error: Unknown dataset '%s'" % opt.dataset)
             sys.exit()
 
-
-        objects_pred = predictions_to_kitti_format(img_detections, calib, img2d.shape, opt.img_size)  
+        objects_pred = predictions_to_kitti_format(img_detections, calib, img2d.shape, opt.img_size)
 
         img2d = mview.show_image_with_boxes(img2d, objects_pred, calib, class_name_to_id_kitti, False)
         
         cv2.imshow("bev img", RGB_Map)
-        cv2.imshow("img2d", img2d)
+        #cv2.imshow("img2d", img2d)
 
         if cv2.waitKey(0) & 0xFF == 27:
             break

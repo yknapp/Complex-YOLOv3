@@ -108,7 +108,7 @@ class AudiYOLODataset(AudiDataset):
             b = bev_utils.removePoints(lidarData, cnf.boundary)
             rgb_map = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
             target = bev_utils.build_yolo_target(labels)
-            img_file = os.path.join(self.image_path, '%s.png' % sample_id)
+            img_file = os.path.join(self.image_path, '%s_camera_frontcenter_%s.png' % (timestamp, idx))
 
             ntargets = 0
             for i, t in enumerate(target):
@@ -131,7 +131,7 @@ class AudiYOLODataset(AudiDataset):
             lidarData = self.get_lidar(timestamp, idx)
             b = bev_utils.removePoints(lidarData, cnf.boundary)
             rgb_map = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
-            img_file = os.path.join(self.image_path, '%s.png' % sample_id)
+            img_file = os.path.join(self.image_path, '%s_camera_frontcenter_%s.png' % (timestamp, idx))
             return img_file, rgb_map
 
     def collate_fn(self, batch):

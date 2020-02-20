@@ -62,3 +62,29 @@ class KittiObject3d(object):
                        self.box2d[2], self.box2d[3], self.h, self.w, self.l, self.t[0], self.t[1], self.t[2],
                        self.ry, self.score)
         return kitti_str
+
+
+class AudiObject3d(object):
+    def __init__(self, bbox):
+        self.class_name = bbox['class']
+        self.truncation = float(bbox['truncation'])
+        self.occlusion = float(bbox['occlusion'])
+        self.alpha = float(bbox['alpha'])
+
+        # 2d bounding box
+        self.xmin = float(bbox['2d_bbox'][1])  # left
+        self.xmax = float(bbox['2d_bbox'][3])  # right
+        self.ymin = float(bbox['2d_bbox'][0])  # top
+        self.ymax = float(bbox['2d_bbox'][2])  # bottom
+        self.box2d = np.array([self.xmin, self.ymin, self.xmax, self.ymax])
+
+        # 3d bounding box
+        self.h = float(bbox['size'][2])  # bbox height
+        self.w = float(bbox['size'][0])  # bbox width
+        self.l = float(bbox['size'][1])  # bbox length (in meters)
+        center_x = float(bbox['center'][0])
+        center_y = float(bbox['center'][1])
+        center_z = float(bbox['center'][2])
+        self.t = (center_x, center_y, center_z)  # location (x,y,z) in camera coord.
+        self.ry = float(bbox['rot_angle'])
+        self.score = -1.0

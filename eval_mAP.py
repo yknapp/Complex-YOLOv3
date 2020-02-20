@@ -37,6 +37,9 @@ def evaluate(dataset_name, model, iou_thres, conf_thres, nms_thres, img_size, ba
     elif opt.dataset == 'lyft2kitti2':
         from utils.lyft2kitti_yolo_dataset2 import Lyft2KittiYOLODataset2
         dataset = Lyft2KittiYOLODataset2(split=split, mode='EVAL', folder='training', data_aug=False)
+    elif opt.dataset == 'audi':
+        from utils.audi_yolo_dataset import AudiYOLODataset
+        dataset = AudiYOLODataset(split=split, mode='EVAL', data_aug=False)
     else:
         print("Error: Unknown dataset '%s'" % opt.dataset)
         sys.exit()

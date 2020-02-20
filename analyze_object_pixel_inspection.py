@@ -28,7 +28,7 @@ def get_label(idx):
     return objects
 
 
-def get_calib(idx):
+def get_calib_kitti(idx):
     calib_file = os.path.join(CALIB_PATH, '%s.txt' % idx)
     assert os.path.exists(calib_file)
     return calibration.KittiCalibration(calib_file)
@@ -85,12 +85,13 @@ def save_pixel_values(img, title, show=False):
     plt.savefig(title.replace(' ', '_'), dpi=400)
     plt.close()
 
+
 def main():
     filename = "f2219d4920c2505c9c6620877b3ae6ac11fda31c0b6d00cc8248752a862c00d3"
     print("processing ", filename)
     bev_original, bev_transformed = load_bevs(filename)
     labels = get_label(filename)
-    calib = get_calib(filename)
+    calib = get_calib_kitti(filename)
 
     # convert from float32 to int8
     bev_original_int = (np.round_(bev_original * 255)).astype(np.uint8)

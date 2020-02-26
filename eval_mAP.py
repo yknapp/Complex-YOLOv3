@@ -21,27 +21,30 @@ def evaluate(dataset_name, model, iou_thres, conf_thres, nms_thres, img_size, ba
     split='valid'
 
     # prepare dataset
-    if opt.dataset == 'kitti':
+    if dataset_name == 'kitti':
         from utils.kitti_yolo_dataset import KittiYOLODataset
         dataset = KittiYOLODataset(split=split, mode='EVAL', folder='training', data_aug=False)
-    elif opt.dataset == 'lyft':
+    elif dataset_name == 'lyft':
         from utils.lyft_yolo_dataset import LyftYOLODataset
         dataset = LyftYOLODataset(split=split, mode='EVAL', folder='training', data_aug=False)
-    elif opt.dataset == 'lyft2kitti':
+    elif dataset_name == 'lyft2kitti':
         from utils.lyft2kitti_yolo_dataset import Lyft2KittiYOLODataset
-        if None not in (opt.unit_config, opt.unit_checkpoint):
+        if None not in (unit_config_path, unit_checkpoint_path):
             dataset = Lyft2KittiYOLODataset(unit_config_path=unit_config_path, unit_checkpoint_path=unit_checkpoint_path, split=split, mode='EVAL', folder='training', data_aug=False)
         else:
             print("Program arguments 'unit_config' and 'unit_checkpoint' must be set for dataset Lyft2Kitti")
             sys.exit()
-    elif opt.dataset == 'lyft2kitti2':
+    elif dataset_name == 'lyft2kitti2':
         from utils.lyft2kitti_yolo_dataset2 import Lyft2KittiYOLODataset2
         dataset = Lyft2KittiYOLODataset2(split=split, mode='EVAL', folder='training', data_aug=False)
-    elif opt.dataset == 'audi':
+    elif dataset_name == 'audi':
         from utils.audi_yolo_dataset import AudiYOLODataset
         dataset = AudiYOLODataset(split=split, mode='EVAL', data_aug=False)
+    elif dataset_name == 'audi2kitti':
+        from utils.audi2kitti_yolo_dataset import Audi2KittiYOLODataset
+        dataset = Audi2KittiYOLODataset(split=split, mode='EVAL', data_aug=False)
     else:
-        print("Error: Unknown dataset '%s'" % opt.dataset)
+        print("Error: Unknown dataset '%s'" % dataset_name)
         sys.exit()
 
     dataloader = torch.utils.data.DataLoader(
@@ -73,9 +76,9 @@ def evaluate(dataset_name, model, iou_thres, conf_thres, nms_thres, img_size, ba
 
     return precision, recall, AP, f1, ap_class
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset", type=str, default="kitti", help="chose dataset (kitti, lyft, lyft2kitti)")
+    parser.add_argument("--dataset", type=str, default="kitti", help="chose dataset (kitti, lyft, lyft2kitti, lyft2kitti2, audi, audi2kitti)")
     parser.add_argument("--batch_size", type=int, default=10, help="size of each image batch")
     parser.add_argument("--model_def", type=str, default="config/complex_tiny_yolov3.cfg", help="path to model definition file")
     parser.add_argument("--weights_path", type=str, default="checkpoints/tiny-yolov3_ckpt_epoch-220.pth", help="path to weights file")
@@ -116,3 +119,6 @@ if __name__ == "__main__":
         print(f"+ Class '{c}' ({class_names[c]}) - AP: {AP[i]}")
 
     print(f"mAP: {AP.mean()}")
+
+if __name__ == "__main__":
+    main()

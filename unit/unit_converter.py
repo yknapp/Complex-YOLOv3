@@ -10,7 +10,7 @@ import torch
 from torchvision import transforms
 
 
-class Lyft2KittiConverter:
+class UnitConverter:
     def __init__(self, config, checkpoint, a2b=1, seed=10):
         self.a2b = a2b
         self.encode = None

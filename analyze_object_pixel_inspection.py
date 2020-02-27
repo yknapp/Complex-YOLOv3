@@ -9,17 +9,24 @@ import matplotlib.pyplot as plt
 from unit.unit_converter import UnitConverter
 
 
+def get_lidar_label_calib_lyft2kitti(dataset, filename):
+    lidar = dataset.get_lidar(filename)
+    labels = dataset.get_label(filename)
+    calib = dataset.get_calib(filename)
+    return lidar, labels, calib
+
+
 def get_dataset_info(dataset):
     if dataset == 'lyft2kitti2':
         dataset_name = 'Lyft'
         chosen_eval_files_path = 'data/LYFT/ImageSets/valid.txt'
-        bev_output_path = '/home/user/work/master_thesis/datasets/lyft_kitti/object/training/bev'
         from utils.lyft2kitti_dataset2 import Lyft2KittiDataset
         dataset = Lyft2KittiDataset()
+        get_lidar_label_calib = get_lidar_label_calib_lyft2kitti
     else:
         print("Unknown dataset '%s'" % dataset)
         sys.exit()
-    return dataset, dataset_name, chosen_eval_files_path, bev_output_path
+    return dataset, dataset_name, chosen_eval_files_path, get_lidar_label_calib
 
 
 def perform_img2img_translation(lyft2kitti_conv, np_img):
@@ -94,18 +101,17 @@ def main():
     opt = parser.parse_args()
 
     # get specific information to chosen dataset
-    dataset, dataset_name, chosen_eval_files_path, bev_output_path = get_dataset_info(opt.dataset)
+    dataset, dataset_name, chosen_eval_files_path, get_lidar_label_calib = get_dataset_info(opt.dataset)
 
     unit_conv = UnitConverter(opt.unit_config, opt.unit_checkpoint)
 
     # get validation images which are chosen for evaluation
-    image_filename_list = [x.strip() for x in open(chosen_eval_files_path).readlines()]
+    filename_list = [x.strip() for x in open(chosen_eval_files_path).readlines()]
 
-    image_filename = image_filename_list[opt.file_index]
-    print("Processing: ", image_filename)
-    lidar = dataset.get_lidar(image_filename)
-    labels = dataset.get_label(image_filename)
-    calib = dataset.get_calib(image_filename)
+    filename = filename_list[opt.file_index]
+    print("Processing: ", filename)
+
+    lidar, labels, calib = get_lidar_label_calib(dataset, filename)
 
     b = bev_utils.removePoints(lidar, cnf.boundary)
     bev_array_raw = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
@@ -118,7 +124,7 @@ def main():
     bev_original_int = (np.round_(bev_array * 255)).astype(np.uint8)
     bev_transformed_int = (np.round_(bev_array_transformed * 255)).astype(np.uint8)
 
-    # extract objects
+    # extract object images
     objects_class_list, objects_list_original = extract_objects(bev_original_int, labels, calib, dataset.CLASS_NAME_TO_ID, False)
     objects_class_list, objects_list_transformed = extract_objects(bev_transformed_int, labels, calib, dataset.CLASS_NAME_TO_ID, False)
 

@@ -138,8 +138,8 @@ def main():
     # get validation images which are chosen for evaluation
     filename_list = [x.strip() for x in open(chosen_eval_files_path).readlines()]
 
-    hist_original_sum_depth = None
-    hist_transformed_sum_depth = None
+    hist_original_sum_height = None
+    hist_transformed_sum_height = None
     hist_original_sum_density = None
     hist_transformed_sum_density = None
     number_of_files = 0
@@ -162,8 +162,8 @@ def main():
         # create histograms
         hist_original_density = create_histogram(bev_original_int[:, :, 0], 255)
         hist_transformed_density = create_histogram(bev_transformed_int[:, :, 0], 255)
-        hist_original_depth = create_histogram(bev_original_int[:, :, 1], 255)
-        hist_transformed_depth = create_histogram(bev_transformed_int[:, :, 1], 255)
+        hist_original_height = create_histogram(bev_original_int[:, :, 1], 255)
+        hist_transformed_height = create_histogram(bev_transformed_int[:, :, 1], 255)
 
         # add to sum histograms
         # DENSITY
@@ -175,15 +175,15 @@ def main():
             hist_transformed_sum_density += hist_transformed_density
         else:
             hist_transformed_sum_density = hist_transformed_density
-        # DEPTH
-        if hist_original_sum_depth is not None:
-            hist_original_sum_depth += hist_original_depth
+        # HEIGHT
+        if hist_original_sum_height is not None:
+            hist_original_sum_height += hist_original_height
         else:
-            hist_original_sum_depth = hist_original_depth
-        if hist_transformed_sum_depth is not None:
-            hist_transformed_sum_depth += hist_transformed_depth
+            hist_original_sum_height = hist_original_height
+        if hist_transformed_sum_height is not None:
+            hist_transformed_sum_height += hist_transformed_height
         else:
-            hist_transformed_sum_depth = hist_transformed_depth
+            hist_transformed_sum_height = hist_transformed_height
 
         # count number of files
         number_of_files += 1
@@ -195,11 +195,11 @@ def main():
     plot_histogram(hist_original_mean_density, label=dataset_name, title='BEV Height Histogram Density')
     plot_histogram(hist_transformed_mean_density, label=dataset_name + '2kitti', title='BEV Height Histogram Density')
     save_curr_histogram(output_filename='mean_density_histogram')
-    # DEPTH
-    hist_original_mean_depth = np.true_divide(hist_original_sum_depth, number_of_files)
-    hist_transformed_mean_depth = np.true_divide(hist_transformed_sum_depth, number_of_files)
-    plot_histogram(hist_original_mean_depth, label=dataset_name, title='BEV Height Histogram Depth', clear=True)
-    plot_histogram(hist_transformed_mean_depth, label=dataset_name+'2kitti', title='BEV Height Histogram Depth')
+    # HEIGHT
+    hist_original_mean_height = np.true_divide(hist_original_sum_height, number_of_files)
+    hist_transformed_mean_height = np.true_divide(hist_transformed_sum_height, number_of_files)
+    plot_histogram(hist_original_mean_height, label=dataset_name, title='BEV Height Histogram Height', clear=True)
+    plot_histogram(hist_transformed_mean_height, label=dataset_name+'2kitti', title='BEV Height Histogram Height')
     save_curr_histogram(output_filename='mean_height_histogram')
 
 

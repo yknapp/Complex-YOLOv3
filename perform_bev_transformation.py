@@ -47,10 +47,9 @@ def get_dataset_info(dataset_name):
 
 def perform_img2img_translation(lyft2kitti_conv, np_img):
     c, height, width = np_img.shape
-    np_img_input = np.zeros((width, width, 3))
+    np_img_input = np.zeros((width, width, 2))
     np_img_input[:, :, 0] = np_img[2, :, :]
     np_img_input[:, :, 1] = np_img[1, :, :]
-    np_img_input[:, :, 2] = np_img[0, :, :]
     np_img_transformed = lyft2kitti_conv.transform(np_img_input)
     np_img_output = np.zeros((3, width, width))
     np_img_output[2, :, :] = np_img_transformed[0, :, :]

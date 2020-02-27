@@ -1,4 +1,5 @@
 import sys
+import imageio
 import argparse
 import numpy as np
 import utils.config as cnf
@@ -9,10 +10,22 @@ import matplotlib.pyplot as plt
 from unit.unit_converter import UnitConverter
 
 
-def get_lidar_label_calib_lyft2kitti(dataset, filename):
-    lidar = dataset.get_lidar(filename)
-    labels = dataset.get_label(filename)
-    calib = dataset.get_calib(filename)
+def get_lidar_label_calib_lyft2kitti(lyft2kitti_dataset, filename):
+    lidar = lyft2kitti_dataset.get_lidar(filename)
+    labels = lyft2kitti_dataset.get_label(filename)
+    calib = lyft2kitti_dataset.get_calib(filename)
+    return lidar, labels, calib
+
+
+def get_lidar_label_calib_audi2kitti(audi2kitti_dataset, filename):
+    # extract timestamp and index out of filename
+    filename_list = filename.split('_')
+    timestamp = filename_list[0]
+    idx = filename_list[3]
+    # fetch data
+    lidar = audi2kitti_dataset.get_lidar(timestamp, idx)
+    labels = audi2kitti_dataset.get_label(timestamp, idx)
+    calib = audi2kitti_dataset.get_calib()
     return lidar, labels, calib
 
 
@@ -23,6 +36,12 @@ def get_dataset_info(dataset):
         from utils.lyft2kitti_dataset2 import Lyft2KittiDataset
         dataset = Lyft2KittiDataset()
         get_lidar_label_calib = get_lidar_label_calib_lyft2kitti
+    elif dataset == 'audi2kitti':
+        dataset_name = 'Audi'
+        chosen_eval_files_path = 'data/AUDI/ImageSets/valid.txt'
+        from utils.audi2kitti_dataset import Audi2KittiDataset
+        dataset = Audi2KittiDataset()
+        get_lidar_label_calib = get_lidar_label_calib_audi2kitti
     else:
         print("Unknown dataset '%s'" % dataset)
         sys.exit()
@@ -38,9 +57,7 @@ def perform_img2img_translation(lyft2kitti_conv, np_img):
     return np_img_output
 
 
-def extract_objects(bev_img, labels, calib, class_name_to_id_dict, draw_bbox=False):
-    objects_list = []
-    objects_class_list = []
+def get_target(labels, calib, class_name_to_id_dict):
     labels_bev, noObjectLabels = bev_utils.read_labels_for_bevbox(labels, class_name_to_id_dict)
     if not noObjectLabels:
         labels_bev[:, 1:] = aug_utils.camera_to_lidar_box(labels_bev[:, 1:], calib.V2C, calib.R0,
@@ -50,6 +67,13 @@ def extract_objects(bev_img, labels, calib, class_name_to_id_dict, draw_bbox=Fal
         sys.exit()
 
     target = bev_utils.build_yolo_target(labels_bev)
+    return target
+
+
+def extract_objects(bev_img, target, draw_bbox=False):
+    objects_list = []
+    objects_class_list = []
+
     if draw_bbox:
         bev_utils.draw_box_in_bev(bev_img, target)
 
@@ -70,6 +94,14 @@ def extract_objects(bev_img, labels, calib, class_name_to_id_dict, draw_bbox=Fal
             objects_class_list.append(curr_obj[0])
 
     return objects_class_list, objects_list
+
+
+def save_whole_bev_img_with_bboxes(img, target, dataset_name):
+    img2 = np.zeros((img.shape[0], img.shape[1], 3))
+    img2[:, :, 2] = img[:, :, 0]
+    img2[:, :, 1] = img[:, :, 1]
+    bev_utils.draw_box_in_bev(img2, target)
+    imageio.imwrite(dataset_name+".png", img2)
 
 
 def save_pixel_values(img, title, show=False):
@@ -125,8 +157,9 @@ def main():
     bev_transformed_int = (np.round_(bev_array_transformed * 255)).astype(np.uint8)
 
     # extract object images
-    objects_class_list, objects_list_original = extract_objects(bev_original_int, labels, calib, dataset.CLASS_NAME_TO_ID, False)
-    objects_class_list, objects_list_transformed = extract_objects(bev_transformed_int, labels, calib, dataset.CLASS_NAME_TO_ID, False)
+    target = get_target(labels, calib, dataset.CLASS_NAME_TO_ID)
+    objects_class_list, objects_list_original = extract_objects(bev_original_int, target, False)
+    objects_class_list, objects_list_transformed = extract_objects(bev_transformed_int, target, False)
 
     print("%s objects found" % len(objects_list_original))
     for idx in range(len(objects_list_original)):
@@ -134,6 +167,9 @@ def main():
         object_class_name = list(dataset.CLASS_NAME_TO_ID.keys())[list(dataset.CLASS_NAME_TO_ID.values()).index(int(objects_class_list[idx]))]
         save_pixel_values(objects_list_original[idx][:, :, 1], title='object %s %s %s' % (idx, object_class_name, dataset_name))
         save_pixel_values(objects_list_transformed[idx][:, :, 1], title='object %s %s %s2KITTI' % (idx, object_class_name, dataset_name))
+
+    save_whole_bev_img_with_bboxes(bev_original_int, target, dataset_name)
+    save_whole_bev_img_with_bboxes(bev_transformed_int, target, dataset_name+"2KITTI")
 
 
 if __name__ == '__main__':

@@ -14,10 +14,6 @@ import torch.utils.data as torch_data
 import utils.dataset_utils as dataset_utils
 import utils.dataset_aug_utils as aug_utils
 import utils.dataset_bev_utils as bev_utils
-from utils.kitti_yolo_dataset import KittiYOLODataset
-from utils.lyft_yolo_dataset import LyftYOLODataset
-from utils.lyft2kitti_yolo_dataset import Lyft2KittiYOLODataset
-from utils.audi_yolo_dataset import AudiYOLODataset
 from utils.calibration import KittiCalibration, AudiCalibration
 import utils.object as object
 import utils.config as cnf
@@ -127,17 +123,27 @@ if __name__ == "__main__":
 
     # prepare dataset
     if opt.dataset == 'kitti':
+        from utils.kitti_yolo_dataset import KittiYOLODataset
         dataset = KittiYOLODataset(split=opt.split, mode='TEST', folder=opt.folder, data_aug=False)
     elif opt.dataset == 'lyft':
+        from utils.lyft_yolo_dataset import LyftYOLODataset
         dataset = LyftYOLODataset(split=opt.split, mode='TEST', folder=opt.folder, data_aug=False)
     elif opt.dataset == 'lyft2kitti':
         if None not in (opt.unit_config, opt.unit_checkpoint):
+            from utils.lyft2kitti_yolo_dataset import Lyft2KittiYOLODataset
             dataset = Lyft2KittiYOLODataset(unit_config_path=opt.unit_config, unit_checkpoint_path=opt.unit_checkpoint, split=opt.split, mode='TEST', folder=opt.folder, data_aug=False)
         else:
             print("Program arguments 'unit_config' and 'unit_checkpoint' must be set for dataset Lyft2Kitti")
             sys.exit()
+    elif opt.dataset == 'lyft2kitti2':
+        from utils.lyft2kitti_yolo_dataset2 import Lyft2KittiYOLODataset2
+        dataset = Lyft2KittiYOLODataset2(split=opt.split, mode='TEST', folder='training', data_aug=False)
     elif opt.dataset == 'audi':
+        from utils.audi_yolo_dataset import AudiYOLODataset
         dataset = AudiYOLODataset(split=opt.split, mode='TEST', folder=opt.folder, data_aug=False)
+    elif opt.dataset == 'audi2kitti':
+        from utils.audi2kitti_yolo_dataset import Audi2KittiYOLODataset
+        dataset = Audi2KittiYOLODataset(split=opt.split, mode='TEST', data_aug=False)
     else:
         print("Unknown dataset '%s'" % opt.dataset)
         sys.exit()
@@ -187,12 +193,12 @@ if __name__ == "__main__":
 
         img2d = cv2.imread(img_paths[0])
 
-        if opt.dataset in ('kitti', 'lyft', 'lyft2kitti'):
+        if opt.dataset in ('kitti', 'lyft', 'lyft2kitti', 'lyft2kitti2'):
             calib = KittiCalibration(img_paths[0].replace(".png", ".txt").replace("image_2", "calib"))
-        elif opt.dataset == 'audi':
+        elif opt.dataset in ('audi', 'audi2kitti'):
             calib = AudiCalibration(dataset.calib_path)
         else:
-            print("Error: Unknown dataset '%s'" % opt.dataset)
+            print("Error: Unknown dataset '%s'. Can't fetch calibration." % opt.dataset)
             sys.exit()
 
         objects_pred = predictions_to_kitti_format(img_detections, calib, img2d.shape, opt.img_size)

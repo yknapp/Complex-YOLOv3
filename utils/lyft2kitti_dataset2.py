@@ -10,7 +10,7 @@ import utils.object as object
 
 class Lyft2KittiDataset(torch_data.Dataset):
 
-    def __init__(self, split='train', folder='testing'):
+    def __init__(self, split='train', folder='training'):
         self.split = split
 
         is_test = self.split == 'test'
@@ -26,8 +26,7 @@ class Lyft2KittiDataset(torch_data.Dataset):
         self.CLASS_NAME_TO_ID = {
             'car': 				    0,
             'pedestrian': 		    1,
-            'bicycle': 			    2,
-            'emergency_vehicle': 	0
+            'bicycle': 			    2
         }
 
         if not is_test:

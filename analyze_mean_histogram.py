@@ -65,7 +65,10 @@ def create_histogram(image, num_bin):
     return cv2.calcHist([image], [0], None, [num_bin], [0, 255])
 
 
-def plot_histogram(histogram, label, title, show=False):
+def plot_histogram(histogram, label, title, show=False, clear=False):
+    if clear:
+        # clear plot from previous data
+        plt.clf()
     plt.plot(histogram, label=label)
     plt.xlim([0, histogram.shape[0]])
     plt.yscale('log')
@@ -135,8 +138,10 @@ def main():
     # get validation images which are chosen for evaluation
     filename_list = [x.strip() for x in open(chosen_eval_files_path).readlines()]
 
-    hist_original_sum = None
-    hist_transformed_sum = None
+    hist_original_sum_depth = None
+    hist_transformed_sum_depth = None
+    hist_original_sum_density = None
+    hist_transformed_sum_density = None
     number_of_files = 0
     for filename in filename_list:
         print("Processing: ", filename)
@@ -155,27 +160,46 @@ def main():
         bev_transformed_int = (np.round_(bev_array_transformed * 255)).astype(np.uint8)
 
         # create histograms
-        hist_original = create_histogram(bev_original_int[:, :, 1], 255)
-        hist_transformed = create_histogram(bev_transformed_int[:, :, 1], 255)
+        hist_original_density = create_histogram(bev_original_int[:, :, 0], 255)
+        hist_transformed_density = create_histogram(bev_transformed_int[:, :, 0], 255)
+        hist_original_depth = create_histogram(bev_original_int[:, :, 1], 255)
+        hist_transformed_depth = create_histogram(bev_transformed_int[:, :, 1], 255)
 
         # add to sum histograms
-        if hist_original_sum is not None:
-            hist_original_sum += hist_original
+        # DENSITY
+        if hist_original_sum_density is not None:
+            hist_original_sum_density += hist_original_density
         else:
-            hist_original_sum = hist_original
-        if hist_transformed_sum is not None:
-            hist_transformed_sum += hist_transformed
+            hist_original_sum_density = hist_original_density
+        if hist_transformed_sum_density is not None:
+            hist_transformed_sum_density += hist_transformed_density
         else:
-            hist_transformed_sum = hist_transformed
+            hist_transformed_sum_density = hist_transformed_density
+        # DEPTH
+        if hist_original_sum_depth is not None:
+            hist_original_sum_depth += hist_original_depth
+        else:
+            hist_original_sum_depth = hist_original_depth
+        if hist_transformed_sum_depth is not None:
+            hist_transformed_sum_depth += hist_transformed_depth
+        else:
+            hist_transformed_sum_depth = hist_transformed_depth
 
         # count number of files
         number_of_files += 1
 
     # calculate mean histogram
-    hist_original_mean = np.true_divide(hist_original_sum, number_of_files)
-    hist_transformed_mean = np.true_divide(hist_transformed_sum, number_of_files)
-    plot_histogram(hist_original_mean, label=dataset_name, title='BEV Height Histogram')
-    plot_histogram(hist_transformed_mean, label=dataset_name+'2kitti', title='BEV Height Histogram')
+    # DENSITY
+    hist_original_mean_density = np.true_divide(hist_original_sum_density, number_of_files)
+    hist_transformed_mean_density = np.true_divide(hist_transformed_sum_density, number_of_files)
+    plot_histogram(hist_original_mean_density, label=dataset_name, title='BEV Height Histogram Density')
+    plot_histogram(hist_transformed_mean_density, label=dataset_name + '2kitti', title='BEV Height Histogram Density')
+    save_curr_histogram(output_filename='mean_density_histogram')
+    # DEPTH
+    hist_original_mean_depth = np.true_divide(hist_original_sum_depth, number_of_files)
+    hist_transformed_mean_depth = np.true_divide(hist_transformed_sum_depth, number_of_files)
+    plot_histogram(hist_original_mean_depth, label=dataset_name, title='BEV Height Histogram Depth', clear=True)
+    plot_histogram(hist_transformed_mean_depth, label=dataset_name+'2kitti', title='BEV Height Histogram Depth')
     save_curr_histogram(output_filename='mean_height_histogram')
 
 

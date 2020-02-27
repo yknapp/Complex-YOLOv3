@@ -165,8 +165,10 @@ def main():
     for idx in range(len(objects_list_original)):
         print("Processing object %s" % idx)
         object_class_name = list(dataset.CLASS_NAME_TO_ID.keys())[list(dataset.CLASS_NAME_TO_ID.values()).index(int(objects_class_list[idx]))]
-        save_pixel_values(objects_list_original[idx][:, :, 1], title='object %s %s %s' % (idx, object_class_name, dataset_name))
-        save_pixel_values(objects_list_transformed[idx][:, :, 1], title='object %s %s %s2KITTI' % (idx, object_class_name, dataset_name))
+        save_pixel_values(objects_list_original[idx][:, :, 1], title='object %s %s %s height' % (idx, object_class_name, dataset_name))
+        save_pixel_values(objects_list_transformed[idx][:, :, 1], title='object %s %s %s2KITTI height' % (idx, object_class_name, dataset_name))
+        save_pixel_values(objects_list_original[idx][:, :, 0], title='object %s %s %s density' % (idx, object_class_name, dataset_name))
+        save_pixel_values(objects_list_transformed[idx][:, :, 0], title='object %s %s %s2KITTI density' % (idx, object_class_name, dataset_name))
 
     save_whole_bev_img_with_bboxes(bev_original_int, target, dataset_name)
     save_whole_bev_img_with_bboxes(bev_transformed_int, target, dataset_name+"2KITTI")

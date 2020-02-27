@@ -26,7 +26,8 @@ class Audi2KittiDataset(torch_data.Dataset):
         self.CLASS_NAME_TO_ID = {
             'Car': 				    0,
             'Pedestrian': 		    1,
-            'Bicycle': 			    2
+            'Bicycle': 			    2,
+            'Cyclist':              2
         }
 
         if not is_test:

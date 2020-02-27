@@ -45,7 +45,8 @@ def get_dataset_info(dataset_name):
     return chosen_eval_files_path, bev_output_path, get_lidar
 
 
-def perform_img2img_translation(lyft2kitti_conv, np_img):
+def perform_img2img_translation(lyft2kitti_conv, np_img_input):
+    np_img = np.copy(np_img_input)
     c, height, width = np_img.shape
     np_img_input = np.zeros((width, width, 2))
     np_img_input[:, :, 0] = np_img[2, :, :]

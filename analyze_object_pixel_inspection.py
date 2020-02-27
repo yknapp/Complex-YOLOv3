@@ -1,81 +1,76 @@
-import os
+import sys
+import argparse
 import numpy as np
-import utils.dataset_utils as dataset_utils
+import utils.config as cnf
 import utils.dataset_bev_utils as bev_utils
 import utils.dataset_aug_utils as aug_utils
-import cv2
 import matplotlib.pyplot as plt
-import object
-import utils.calibration as calibration
 
-BEV_DATASET_PATH = '/home/user/work/master_thesis/datasets/lyft_kitti/object/training/bev_arrays'
-LABEL_PATH = '/home/user/work/master_thesis/datasets/lyft_kitti/object/training/label_2'
-CALIB_PATH = '/home/user/work/master_thesis/datasets/lyft_kitti/object/training/calib'
-LYFT_CLASS_NAME_TO_ID = {
-            'car': 				    0,
-            'pedestrian': 		    1,
-            'bicycle': 			    2
-            }
-BEV_WIDTH = 480
-BEV_HEIGHT = 480
+from unit.unit_converter import UnitConverter
 
 
-def get_label(idx):
-    label_file = os.path.join(LABEL_PATH, '%s.txt' % idx)
-    assert os.path.exists(label_file)
-    lines = [line.rstrip() for line in open(label_file)]
-    objects = [object.KittiObject3d(line) for line in lines]
-    return objects
+def get_dataset_info(dataset):
+    if dataset == 'lyft2kitti2':
+        dataset_name = 'Lyft'
+        chosen_eval_files_path = 'data/LYFT/ImageSets/valid.txt'
+        bev_output_path = '/home/user/work/master_thesis/datasets/lyft_kitti/object/training/bev'
+        from utils.lyft2kitti_dataset2 import Lyft2KittiDataset
+        dataset = Lyft2KittiDataset()
+    else:
+        print("Unknown dataset '%s'" % dataset)
+        sys.exit()
+    return dataset, dataset_name, chosen_eval_files_path, bev_output_path
 
 
-def get_calib_kitti(idx):
-    calib_file = os.path.join(CALIB_PATH, '%s.txt' % idx)
-    assert os.path.exists(calib_file)
-    return calibration.KittiCalibration(calib_file)
+def perform_img2img_translation(lyft2kitti_conv, np_img):
+    height, width, c = np_img.shape
+    np_img_transformed = lyft2kitti_conv.transform(np_img)
+    np_img_output = np.zeros((width, width, 2))
+    np_img_output[:, :, 0] = np_img_transformed[0, :, :]
+    np_img_output[:, :, 1] = np_img_transformed[1, :, :]
+    return np_img_output
 
 
-def load_bevs(filename):
-    input_file_path = os.path.join(BEV_DATASET_PATH, filename)
-    original_filename = input_file_path+'_original.npy'
-    transformed_filename = input_file_path+'_transformed.npy'
-    bev_original = np.load(original_filename)
-    bev_transformed = np.load(transformed_filename)
-    return bev_original, bev_transformed
-
-
-def extract_objects(bev_img, labels, calib, draw_bbox=False):
+def extract_objects(bev_img, labels, calib, class_name_to_id_dict, draw_bbox=False):
     objects_list = []
-    labels_bev, noObjectLabels = bev_utils.read_labels_for_bevbox(labels, LYFT_CLASS_NAME_TO_ID)
+    objects_class_list = []
+    labels_bev, noObjectLabels = bev_utils.read_labels_for_bevbox(labels, class_name_to_id_dict)
     if not noObjectLabels:
         labels_bev[:, 1:] = aug_utils.camera_to_lidar_box(labels_bev[:, 1:], calib.V2C, calib.R0,
                                                           calib.P)  # convert rect cam to velo cord
+    else:
+        print("NO OBJECT LABELS!")
+        sys.exit()
 
     target = bev_utils.build_yolo_target(labels_bev)
     if draw_bbox:
         bev_utils.draw_box_in_bev(bev_img, target)
 
     for curr_obj in target:
-        # get_object_coordinates
-        w = curr_obj[3] * BEV_WIDTH
-        l = curr_obj[4] * BEV_HEIGHT
-        crop_size = max(w, l)
-        min_x = min(max(0, int(curr_obj[1] * BEV_WIDTH - crop_size / 2)), BEV_WIDTH)
-        max_x = min(max(0, int(min_x + crop_size)), BEV_WIDTH)
-        min_y = min(max(0, int(curr_obj[2] * BEV_HEIGHT - crop_size / 2)), BEV_HEIGHT)
-        max_y = min(max(0, int(min_y + crop_size)), BEV_HEIGHT)
+        # only add object, if target has values inside (target=[0, 0, 0, 0, 0, 0, 0] means that there is no object)
+        if not np.array_equal(curr_obj, np.zeros((7,))):
+            # get_object_coordinates
+            w = curr_obj[3] * cnf.BEV_WIDTH
+            l = curr_obj[4] * cnf.BEV_HEIGHT
+            crop_size = max(w, l)
+            min_x = min(max(0, int(curr_obj[1] * cnf.BEV_WIDTH - crop_size / 2)), cnf.BEV_WIDTH)
+            max_x = min(max(0, int(min_x + crop_size)), cnf.BEV_WIDTH)
+            min_y = min(max(0, int(curr_obj[2] * cnf.BEV_HEIGHT - crop_size / 2)), cnf.BEV_HEIGHT)
+            max_y = min(max(0, int(min_y + crop_size)), cnf.BEV_HEIGHT)
 
-        object_img = bev_img[min_y:max_y, min_x:max_x, :]
-        objects_list.append(object_img)
+            object_img = bev_img[min_y:max_y, min_x:max_x, :]
+            objects_list.append(object_img)
+            objects_class_list.append(curr_obj[0])
 
-    return objects_list
+    return objects_class_list, objects_list
 
 
 def save_pixel_values(img, title, show=False):
     fig, ax = plt.subplots()
     ax.imshow(img, cmap='gray')
 
-    for i in range(img.shape[1]):
-        for j in range(img.shape[0]):
+    for i in range(img.shape[0]):
+        for j in range(img.shape[1]):
             ax.text(j, i, img[i, j], ha="center", va="center", color="gray", fontsize=3)
 
     ax.set_title(title)
@@ -87,23 +82,52 @@ def save_pixel_values(img, title, show=False):
 
 
 def main():
-    filename = "f2219d4920c2505c9c6620877b3ae6ac11fda31c0b6d00cc8248752a862c00d3"
-    print("processing ", filename)
-    bev_original, bev_transformed = load_bevs(filename)
-    labels = get_label(filename)
-    calib = get_calib_kitti(filename)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--file_index", type=int, default=0, help="File index of ComplexYOLO validation list")
+    parser.add_argument("--dataset", type=str, default="None", help="chose dataset (lyft2kitti2, audi2kitti)")
+    parser.add_argument("--model_def", type=str, default="config/complex_tiny_yolov3.cfg",
+                        help="path to model definition file")
+    parser.add_argument("--weights_path", type=str, default="checkpoints/tiny-yolov3_ckpt_epoch-220.pth",
+                        help="path to weights file")
+    parser.add_argument('--unit_config', type=str, default=None, help="UNIT net configuration")
+    parser.add_argument('--unit_checkpoint', type=str, default=None, help="checkpoint of UNIT autoencoders")
+    opt = parser.parse_args()
+
+    # get specific information to chosen dataset
+    dataset, dataset_name, chosen_eval_files_path, bev_output_path = get_dataset_info(opt.dataset)
+
+    unit_conv = UnitConverter(opt.unit_config, opt.unit_checkpoint)
+
+    # get validation images which are chosen for evaluation
+    image_filename_list = [x.strip() for x in open(chosen_eval_files_path).readlines()]
+
+    image_filename = image_filename_list[opt.file_index]
+    print("Processing: ", image_filename)
+    lidar = dataset.get_lidar(image_filename)
+    labels = dataset.get_label(image_filename)
+    calib = dataset.get_calib(image_filename)
+
+    b = bev_utils.removePoints(lidar, cnf.boundary)
+    bev_array_raw = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
+    bev_array = np.zeros((bev_array_raw.shape[1], bev_array_raw.shape[2], 2))
+    bev_array[:, :, 0] = bev_array_raw[2, :, :]
+    bev_array[:, :, 1] = bev_array_raw[1, :, :]
+    bev_array_transformed = perform_img2img_translation(unit_conv, bev_array)
 
     # convert from float32 to int8
-    bev_original_int = (np.round_(bev_original * 255)).astype(np.uint8)
-    bev_transformed_int = (np.round_(bev_transformed * 255)).astype(np.uint8)
+    bev_original_int = (np.round_(bev_array * 255)).astype(np.uint8)
+    bev_transformed_int = (np.round_(bev_array_transformed * 255)).astype(np.uint8)
 
-    objects_list_original = extract_objects(bev_original_int, labels, calib, False)
-    objects_list_transformed = extract_objects(bev_transformed_int, labels, calib, False)
+    # extract objects
+    objects_class_list, objects_list_original = extract_objects(bev_original_int, labels, calib, dataset.CLASS_NAME_TO_ID, False)
+    objects_class_list, objects_list_transformed = extract_objects(bev_transformed_int, labels, calib, dataset.CLASS_NAME_TO_ID, False)
 
+    print("%s objects found" % len(objects_list_original))
     for idx in range(len(objects_list_original)):
         print("Processing object %s" % idx)
-        save_pixel_values(objects_list_original[idx][:, :, 1], title='%s object %s' % ("KITTI", idx))
-        save_pixel_values(objects_list_transformed[idx][:, :, 1], title='%s object %s' % ("Lyft2KITTI", idx))
+        object_class_name = list(dataset.CLASS_NAME_TO_ID.keys())[list(dataset.CLASS_NAME_TO_ID.values()).index(int(objects_class_list[idx]))]
+        save_pixel_values(objects_list_original[idx][:, :, 1], title='object %s %s %s' % (idx, object_class_name, dataset_name))
+        save_pixel_values(objects_list_transformed[idx][:, :, 1], title='object %s %s %s2KITTI' % (idx, object_class_name, dataset_name))
 
 
 if __name__ == '__main__':

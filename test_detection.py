@@ -173,10 +173,10 @@ if __name__ == "__main__":
         bev_maps = torch.squeeze(bev_maps).numpy()
 
         RGB_Map = np.zeros((cnf.BEV_WIDTH, cnf.BEV_WIDTH, 3))
-        RGB_Map[:, :, 2] = bev_maps[0, :, :]  # r_map
-        RGB_Map[:, :, 1] = bev_maps[1, :, :]  # g_map
-        RGB_Map[:, :, 0] = bev_maps[2, :, :]  # b_map
-        
+        RGB_Map[:, :, 0] = bev_maps[0, :, :]  # density
+        RGB_Map[:, :, 1] = bev_maps[1, :, :]  # height
+        RGB_Map[:, :, 2] = bev_maps[2, :, :]  # intensity
+
         RGB_Map *= 255
         RGB_Map = RGB_Map.astype(np.uint8)
         

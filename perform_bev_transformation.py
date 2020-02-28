@@ -45,16 +45,34 @@ def get_dataset_info(dataset_name):
     return chosen_eval_files_path, bev_output_path, get_lidar
 
 
+def shift_image(input_img, x_shift=0, y_shift=0):
+    input_img_shifted = np.copy(input_img)
+    input_img_shifted = np.roll(input_img_shifted, x_shift)
+    input_img_shifted = np.roll(input_img_shifted, y_shift, axis=1)
+    # clear the pixels, which were shifted from the right to the left side of the image
+    if x_shift < 0:
+        input_img_shifted[:, :, x_shift:] = 0.0
+    else:
+        input_img_shifted[:, :, :x_shift] = 0.0
+    if y_shift < 0:
+        input_img_shifted[:, y_shift:, :] = 0.0
+    else:
+        input_img_shifted[:, :y_shift, :] = 0.0
+    return input_img_shifted
+
+
 def perform_img2img_translation(lyft2kitti_conv, np_img_input):
     np_img = np.copy(np_img_input)
     c, height, width = np_img.shape
     np_img_input = np.zeros((width, width, 2))
-    np_img_input[:, :, 0] = np_img[2, :, :]
-    np_img_input[:, :, 1] = np_img[1, :, :]
+    np_img_input[:, :, 0] = np_img[2, :, :]  # density
+    np_img_input[:, :, 1] = np_img[1, :, :]  # height
     np_img_transformed = lyft2kitti_conv.transform(np_img_input)
+    # add shift to compensate the shift of UNIT transformation
+    np_img_transformed = shift_image(np_img_transformed, x_shift=-6, y_shift=1)
     np_img_output = np.zeros((3, width, width))
-    np_img_output[2, :, :] = np_img_transformed[0, :, :]
-    np_img_output[1, :, :] = np_img_transformed[1, :, :]
+    np_img_output[2, :, :] = np_img_transformed[0, :, :]  # density
+    np_img_output[1, :, :] = np_img_transformed[1, :, :]  # height
     return np_img_output
 
 

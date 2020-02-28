@@ -204,9 +204,15 @@ if __name__ == "__main__":
         objects_pred = predictions_to_kitti_format(img_detections, calib, img2d.shape, opt.img_size)
 
         img2d = mview.show_image_with_boxes(img2d, objects_pred, calib, class_name_to_id_kitti, False)
-        
-        cv2.imshow("bev img", RGB_Map)
+
+        img_filename = img_paths[0].split('/')[-1].replace('.png', '')
+        print("Current filename: %s (idx: %s)" % (img_filename, index))
+        cv2.imshow(opt.dataset+" BEV image", RGB_Map)
         #cv2.imshow("img2d", img2d)
 
-        if cv2.waitKey(0) & 0xFF == 27:
+        if (cv2.waitKey(0) & 0xFF) == ord('s'):
+            output_filename = 'idx_%s_bev_%s_%s.png' % (index, opt.dataset, img_filename)
+            cv2.imwrite(output_filename, RGB_Map)
+            print("Saved to '%s'" % output_filename)
+        if cv2.waitKey(0) & 0xFF == 27:  # escape
             break

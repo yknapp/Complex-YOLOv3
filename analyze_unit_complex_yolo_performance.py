@@ -37,8 +37,8 @@ def main():
     #parser = argparse.ArgumentParser()
     #parser.add_argument('--evaluation_file', type=str, default=None, help="file containing all ComplexYOLO evaluation results")
     #opts = parser.parse_args()
-    evaluation_file = "/home/user/work/master_thesis/code/UNIT/outputs/unit_bev_new_lyft2kitti_2channel_folder_2/unit_bev_new_lyft2kitti_2channel_folder_2.txt"
-    #evaluation_file = "/home/user/work/master_thesis/code/UNIT/outputs/unit_bev_new_audi2kitti_2channel_folder/unit_bev_new_audi2kitti_2channel_folder.txt"
+    #evaluation_file = "/home/user/work/master_thesis/code/UNIT/outputs/unit_bev_new_lyft2kitti_2channel_folder_2/unit_bev_new_lyft2kitti_2channel_folder_2.txt"
+    evaluation_file = "/home/user/work/master_thesis/code/UNIT/outputs/unit_bev_new_audi2kitti_2channel_folder/unit_bev_new_audi2kitti_2channel_folder.txt"
 
     file_content = read_txt_file(evaluation_file)
 
@@ -68,8 +68,8 @@ def main():
     print("Max cyclist AP: %s (idx %s)" % (max(extracted_cyclist_aps), extracted_cyclist_aps.index(max(extracted_cyclist_aps))))
 
     # create plot
-    plot_title = "ComplexYOLO mAP"
-    axis_label_x = "iterations"
+    plot_title = "ComplexYOLO Performance"
+    axis_label_x = "UNIT iterations"
     axis_label_y = "ComplexYOLO AP"
     create_plot(extracted_mAPs, plot_title, "mAP", axis_label_x, axis_label_y)
     create_plot(extracted_car_aps, plot_title, "car AP", axis_label_x, axis_label_y)

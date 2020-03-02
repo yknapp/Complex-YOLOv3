@@ -206,14 +206,14 @@ def main():
         # DENSITY
         hist_original_mean_density = np.true_divide(hist_original_sum_density, number_of_files)
         hist_transformed_mean_density = np.true_divide(hist_transformed_sum_density, number_of_files)
-        plot_histogram(hist_original_mean_density, label=dataset_name, title='BEV Height Histogram Density')
-        plot_histogram(hist_transformed_mean_density, label=dataset_name + '2kitti', title='BEV Height Histogram Density')
+        plot_histogram(hist_original_mean_density, label=dataset_name, title='BEV Histogram Density')
+        plot_histogram(hist_transformed_mean_density, label=dataset_name + '2kitti', title='BEV Histogram Density')
         save_curr_histogram(output_filename='mean_density_histogram')
         # HEIGHT
         hist_original_mean_height = np.true_divide(hist_original_sum_height, number_of_files)
         hist_transformed_mean_height = np.true_divide(hist_transformed_sum_height, number_of_files)
-        plot_histogram(hist_original_mean_height, label=dataset_name, title='BEV Height Histogram Height', clear=True)
-        plot_histogram(hist_transformed_mean_height, label=dataset_name+'2kitti', title='BEV Height Histogram Height')
+        plot_histogram(hist_original_mean_height, label=dataset_name, title='BEV Histogram Height', clear=True)
+        plot_histogram(hist_transformed_mean_height, label=dataset_name+'2kitti', title='BEV Histogram Height')
         save_curr_histogram(output_filename='mean_height_histogram')
 
     # KITTI without transformations
@@ -257,11 +257,11 @@ def main():
         # calculate mean histogram
         # DENSITY
         hist_original_mean_density = np.true_divide(hist_sum_density, number_of_files)
-        plot_histogram(hist_original_mean_density, label=dataset_name, title='BEV Height Histogram Density')
+        plot_histogram(hist_original_mean_density, label=dataset_name, title='BEV Histogram Density')
         save_curr_histogram(output_filename='mean_density_histogram')
         # HEIGHT
         hist_original_mean_height = np.true_divide(hist_sum_height, number_of_files)
-        plot_histogram(hist_original_mean_height, label=dataset_name, title='BEV Height Histogram Height', clear=True)
+        plot_histogram(hist_original_mean_height, label=dataset_name, title='BEV Histogram Height', clear=True)
         save_curr_histogram(output_filename='mean_height_histogram')
 
 

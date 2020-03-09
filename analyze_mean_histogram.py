@@ -60,10 +60,16 @@ def get_dataset_info(dataset):
 def perform_img2img_translation(lyft2kitti_conv, np_img_input):
     np_img = np.copy(np_img_input)
     height, width, c = np_img.shape
+    ### height 1 channel
+    #np_img_input1 = np.zeros((width, width, 1))
+    #np_img_input1[:, :, 0] = np_img[:, :, 0]
+    ###
     np_img_transformed = lyft2kitti_conv.transform(np_img)
     np_img_output = np.zeros((width, width, 2))
     np_img_output[:, :, 0] = np_img_transformed[0, :, :]
     np_img_output[:, :, 1] = np_img_transformed[1, :, :]
+    #np_img_output[:, :, 0] = np_img_transformed[0, :, :]
+    #np_img_output[:, :, 1] = np_img_transformed[0, :, :]
     return np_img_output
 
 
@@ -82,7 +88,7 @@ def plot_histogram(histogram, label, title, show=False, clear=False):
         # clear plot from previous data
         plt.clf()
     plt.plot(histogram, label=label)
-    plt.xlim([0, histogram.shape[0]])
+    plt.xlim(right=histogram.shape[0])
     plt.yscale('log')
     plt.xlabel('Grayscale value')
     plt.ylabel('Number of pixels')
@@ -157,7 +163,7 @@ def main():
         hist_original_sum_density = None
         hist_transformed_sum_density = None
         number_of_files = 0
-        for filename in filename_list:
+        for filename in filename_list[:10]:
             print("Processing: ", filename)
 
             # create bevs

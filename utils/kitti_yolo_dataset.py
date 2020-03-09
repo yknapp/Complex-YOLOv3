@@ -120,7 +120,9 @@ class KittiYOLODataset(KittiDataset):
 
         else:
             lidarData = self.get_lidar(sample_id)
+            calib = self.get_calib(sample_id)
             b = bev_utils.removePoints(lidarData, cnf.boundary)
+            #b = bev_utils.remove_fov_points(b, calib)  # remove points outside camera FOV
             rgb_map = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
             img_file = os.path.join(self.image_path, '%06d.png' % sample_id)
             return img_file, rgb_map

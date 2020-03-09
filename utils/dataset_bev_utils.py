@@ -23,6 +23,18 @@ def removePoints(PointCloud, BoundaryCond):
 
     return PointCloud
 
+
+def remove_fov_points(lidar_data, calib):
+    b = lidar_data.copy()
+    pts_2d = calib.project_velo_to_image(b[:, 0:3])
+    fov_inds = (
+            (pts_2d[:, 0] < 1000)
+            & (pts_2d[:, 0] >= 200)
+    )
+    fov_inds = fov_inds & (b[:, 0] > 2.0)
+    b2 = b[fov_inds, :]
+    return b2
+
 def makeBVFeature(PointCloud_, Discretization, bc):
 
     Height = cnf.BEV_HEIGHT + 1

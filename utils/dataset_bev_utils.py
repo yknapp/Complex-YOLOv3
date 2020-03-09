@@ -64,6 +64,11 @@ def makeBVFeature(PointCloud_, Discretization, bc):
     #RGB_Map[0, :, :] = intensityMap[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # b_map
     RGB_Map[0, :, :] = np.zeros((cnf.BEV_HEIGHT, cnf.BEV_WIDTH))  # b_map with zeroes => test results without intensity
 
+    # ONLY HEIGHT
+    #RGB_Map[2, :, :] = heightMap[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # r_map
+    #RGB_Map[1, :, :] = heightMap[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # g_map
+    #RGB_Map[0, :, :] = heightMap[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # b_map
+
     return RGB_Map
 
 def read_labels_for_bevbox(objects, class_name_to_id_dict):

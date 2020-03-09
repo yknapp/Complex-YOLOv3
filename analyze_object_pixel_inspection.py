@@ -7,6 +7,8 @@ import utils.dataset_bev_utils as bev_utils
 import utils.dataset_aug_utils as aug_utils
 import matplotlib.pyplot as plt
 
+from matplotlib import cm
+from matplotlib import colors
 from unit.unit_converter import UnitConverter
 
 
@@ -67,10 +69,16 @@ def shift_image(input_img, x_shift=0, y_shift=0):
 def perform_img2img_translation(lyft2kitti_conv, np_img_input):
     np_img = np.copy(np_img_input)
     height, width, c = np_img.shape
+    ############### height 1 channel
+    #np_img_input1 = np.zeros((width, width, 1))
+    #np_img_input1[:, :, 0] = np_img[:, :, 0]  # height 1 channel
+    ###############
     np_img_transformed = lyft2kitti_conv.transform(np_img)
     # add shift to compensate the shift of UNIT transformation
     np_img_transformed = shift_image(np_img_transformed, x_shift=-6, y_shift=1)
+    #np_img_transformed = shift_image(np_img_transformed, x_shift=1, y_shift=-2)
     np_img_output = np.zeros((width, width, 2))
+    #np_img_output[:, :, 1] = np_img_transformed[0, :, :] # density
     np_img_output[:, :, 0] = np_img_transformed[0, :, :] # density
     np_img_output[:, :, 1] = np_img_transformed[1, :, :] # height
     return np_img_output
@@ -124,8 +132,10 @@ def save_whole_bev_img_with_bboxes(img, target, dataset_name):
 
 
 def save_pixel_values(img, title, show=False):
+    gray = cm.get_cmap('gray', 256)
+    normalize = colors.Normalize(vmin=0, vmax=255, clip=False)
     fig, ax = plt.subplots()
-    ax.imshow(img, cmap='gray')
+    ax.imshow(img, cmap=gray, norm=normalize)
 
     for i in range(img.shape[0]):
         for j in range(img.shape[1]):
@@ -136,6 +146,8 @@ def save_pixel_values(img, title, show=False):
     if show:
         plt.show()
     plt.savefig(title.replace(' ', '_'), dpi=400)
+    plt.cla()
+    plt.clf()
     plt.close()
 
 
@@ -184,8 +196,8 @@ def main():
     for idx in range(len(objects_list_original)):
         print("Processing object %s" % idx)
         object_class_name = list(dataset.CLASS_NAME_TO_ID.keys())[list(dataset.CLASS_NAME_TO_ID.values()).index(int(objects_class_list[idx]))]
-        save_pixel_values(objects_list_original[idx][:, :, 1], title='object %s %s %s height' % (idx, object_class_name, dataset_name))
         save_pixel_values(objects_list_transformed[idx][:, :, 1], title='object %s %s %s2KITTI height' % (idx, object_class_name, dataset_name))
+        save_pixel_values(objects_list_original[idx][:, :, 1], title='object %s %s %s height' % (idx, object_class_name, dataset_name))
         save_pixel_values(objects_list_original[idx][:, :, 0], title='object %s %s %s density' % (idx, object_class_name, dataset_name))
         save_pixel_values(objects_list_transformed[idx][:, :, 0], title='object %s %s %s2KITTI density' % (idx, object_class_name, dataset_name))
 

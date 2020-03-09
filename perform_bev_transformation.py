@@ -64,15 +64,21 @@ def shift_image(input_img, x_shift=0, y_shift=0):
 def perform_img2img_translation(lyft2kitti_conv, np_img_input):
     np_img = np.copy(np_img_input)
     c, height, width = np_img.shape
+    #np_img_input1 = np.zeros((width, width, 1))
+    #np_img_input1[:, :, 0] = np_img[0, :, :]  # height 1 channel
     np_img_input = np.zeros((width, width, 2))
     np_img_input[:, :, 0] = np_img[2, :, :]  # density
     np_img_input[:, :, 1] = np_img[1, :, :]  # height
     np_img_transformed = lyft2kitti_conv.transform(np_img_input)
     # add shift to compensate the shift of UNIT transformation
-    np_img_transformed = shift_image(np_img_transformed, x_shift=-6, y_shift=1)
+    #np_img_transformed = shift_image(np_img_transformed, x_shift=-6, y_shift=1)
+    #np_img_transformed = shift_image(np_img_transformed, x_shift=1, y_shift=-2)
     np_img_output = np.zeros((3, width, width))
     np_img_output[2, :, :] = np_img_transformed[0, :, :]  # density
     np_img_output[1, :, :] = np_img_transformed[1, :, :]  # height
+    #np_img_output[0, :, :] = np_img_transformed[0, :, :]
+    #np_img_output[1, :, :] = np_img_transformed[0, :, :]
+    #np_img_output[2, :, :] = np_img_transformed[0, :, :]
     return np_img_output
 
 

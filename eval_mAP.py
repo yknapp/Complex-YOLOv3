@@ -117,6 +117,7 @@ def main():
     print("Average Precisions:")
     for i, c in enumerate(ap_class):
         print(f"+ Class '{c}' ({class_names[c]}) - AP: {AP[i]}")
+        #print(f"+ Class '{c}' ({class_names[c]}) - AP: {AP[i]} - recall: {recall[i]}")
 
     print(f"mAP: {AP.mean()}")
 

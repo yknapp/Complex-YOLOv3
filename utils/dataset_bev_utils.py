@@ -91,8 +91,8 @@ def read_labels_for_bevbox(objects, class_name_to_id_dict):
             bbox.append(class_name_to_id_dict[obj.class_name])
             bbox.extend([obj.t[0], obj.t[1], obj.t[2], obj.h, obj.w, obj.l, obj.ry])
             bbox_selected.append(bbox)
-        else:
-            print("Ignore unknown class '%s'" % obj.class_name)
+        #else:
+        #    print("Ignore unknown class '%s'" % obj.class_name)
     
     if (len(bbox_selected) == 0):
         return np.zeros((1, 8), dtype=np.float32), True

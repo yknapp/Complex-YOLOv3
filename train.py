@@ -143,12 +143,15 @@ if __name__ == "__main__":
             print("\n---- Evaluating Model ----")
             # Evaluate the model on the validation set
             precision, recall, AP, f1, ap_class = evaluate(
+                'kitti',
                 model,
                 iou_thres=0.5,
                 conf_thres=0.5,
                 nms_thres=0.5,
                 img_size=opt.img_size,
                 batch_size=8,
+                unit_config_path=None,
+                unit_checkpoint_path=None
             )
             evaluation_metrics = [
                 ("val_precision", precision.mean()),

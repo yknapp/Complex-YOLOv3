@@ -4,6 +4,7 @@ import argparse
 import numpy as np
 import utils.config as cnf
 import utils.dataset_bev_utils as bev_utils
+import postprocessing
 
 from unit.unit_converter import UnitConverter
 
@@ -12,7 +13,9 @@ def get_lidar_lyft(idx):
     lyft_lidar_path = '/home/user/work/master_thesis/datasets/lyft_kitti/object/training/velodyne'
     lidar_file = os.path.join(lyft_lidar_path, '%s.bin' % idx)
     assert os.path.exists(lidar_file)
-    return np.fromfile(lidar_file, dtype=np.float32).reshape(-1, 4)
+    lidar_pc = np.fromfile(lidar_file, dtype=np.float32).reshape(-1, 4)
+    lidar_pc[:, 3] = 0.0  # intensity channel of Lyft pointcloud is always 100, so erase this
+    return lidar_pc
 
 
 def get_lidar_audi(img_filename):
@@ -66,9 +69,14 @@ def perform_img2img_translation(lyft2kitti_conv, np_img_input):
     c, height, width = np_img.shape
     #np_img_input1 = np.zeros((width, width, 1))
     #np_img_input1[:, :, 0] = np_img[0, :, :]  # height 1 channel
-    np_img_input = np.zeros((width, width, 2))
+    #np_img_input = np.zeros((width, width, 2))
+    #np_img_input[:, :, 0] = np_img[2, :, :]  # density
+    #np_img_input[:, :, 1] = np_img[1, :, :]  # height
+    # 3 channels
+    np_img_input = np.zeros((width, width, 3))
     np_img_input[:, :, 0] = np_img[2, :, :]  # density
     np_img_input[:, :, 1] = np_img[1, :, :]  # height
+    np_img_input[:, :, 2] = np_img[0, :, :]  # intensity
     np_img_transformed = lyft2kitti_conv.transform(np_img_input)
     # add shift to compensate the shift of UNIT transformation
     #np_img_transformed = shift_image(np_img_transformed, x_shift=-6, y_shift=1)
@@ -76,6 +84,7 @@ def perform_img2img_translation(lyft2kitti_conv, np_img_input):
     np_img_output = np.zeros((3, width, width))
     np_img_output[2, :, :] = np_img_transformed[0, :, :]  # density
     np_img_output[1, :, :] = np_img_transformed[1, :, :]  # height
+    np_img_output[0, :, :] = np_img_transformed[2, :, :]  # intensity
     #np_img_output[0, :, :] = np_img_transformed[0, :, :]
     #np_img_output[1, :, :] = np_img_transformed[0, :, :]
     #np_img_output[2, :, :] = np_img_transformed[0, :, :]
@@ -109,6 +118,9 @@ def main():
         b = bev_utils.removePoints(lidarData, cnf.boundary)
         bev_array = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
         bev_array_transformed = perform_img2img_translation(unit_conv, bev_array)
+        #bev_array_transformed = postprocessing.blacken_pixel(bev_array_transformed, threshold=0.2)
+        #bev_array_transformed[:, :, 2] = postprocessing.blacken_pixel(bev_array_transformed[:, :, 2], threshold=0.2)  # density
+        #bev_array_transformed[:, :, 1] = postprocessing.blacken_pixel(bev_array_transformed[:, :, 1], threshold=0.2)  # height
         output_path = os.path.join(bev_output_path, image_filename)
         np.save('%s.npy' % output_path, bev_array_transformed)
 

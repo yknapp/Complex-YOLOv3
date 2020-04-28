@@ -2,7 +2,7 @@
 
 dataset=lyft2kitti2
 num_channels=2
-temp_bev_path="/home/user/work/master_thesis/datasets/bev_images/lyft2kitti"
+temp_bev_path="/home/user/work/master_thesis/datasets/lyft_kitti/object/training/bev"
 
 # UNIT
 unit_model_folder="unit_bev_lyft2kitti_2channel_folder_8"

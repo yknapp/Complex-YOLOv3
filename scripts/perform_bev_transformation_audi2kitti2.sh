@@ -2,7 +2,7 @@
 
 dataset=audi2kitti
 num_channels=2
-bev_temp_path="/home/user/work/master_thesis/datasets/bev_images/audi2kitti"
+bev_temp_path="/home/user/work/master_thesis/datasets/audi/camera_lidar_semantic_bboxes/bev"
 
 # UNIT
 unit_model_folder="unit_bev_new_audi2kitti_2channel_folder_3"

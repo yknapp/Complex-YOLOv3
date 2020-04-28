@@ -3,14 +3,15 @@ import os
 import sys
 import numpy as np
 import random
-from utils.lyft2kitti_dataset2 import Lyft2KittiDataset
 import utils.dataset_aug_utils as augUtils
 import utils.dataset_bev_utils as bev_utils
 import utils.config as cnf
 import postprocessing
-
 import torch
 import torch.nn.functional as F
+
+from utils.lyft2kitti_dataset2 import Lyft2KittiDataset
+
 
 def resize(image, size):
     image = F.interpolate(image.unsqueeze(0), size=size, mode="nearest").squeeze(0)
@@ -135,6 +136,7 @@ class Lyft2KittiYOLODataset2(Lyft2KittiDataset):
             ###############################################################################################
             # set pixels black
             #threshold = 0.05
+            #rgb_map[0, :, :] = postprocessing.blacken_pixel(rgb_map[0, :, :], threshold=threshold)  # intensity
             #rgb_map[1, :, :] = postprocessing.blacken_pixel(rgb_map[1, :, :], threshold=threshold)  # height
             #rgb_map[2, :, :] = postprocessing.blacken_pixel(rgb_map[2, :, :], threshold=threshold)  # density
             #rgb_map = postprocessing.blacken_pixel(rgb_map, threshold=threshold)

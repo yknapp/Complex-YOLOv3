@@ -67,19 +67,19 @@ def shift_image(input_img, x_shift=0, y_shift=0):
     return input_img_shifted
 
 
-def perform_img2img_translation(lyft2kitti_conv, np_img_input, num_channel):
+def perform_img2img_translation(lyft2kitti_conv, np_img_input, num_channels):
     np_img = np.copy(np_img_input)
     c, height, width = np_img.shape
-    if num_channel == 1:
+    if num_channels == 1:
         np_img_input1 = np.zeros((width, width, 1))
         np_img_input1[:, :, 0] = np_img[0, :, :]  # height
         print("IMG2IMG TRANSLATION: 1 Channel")
-    elif num_channel == 2:
+    elif num_channels == 2:
         np_img_input = np.zeros((width, width, 2))
         np_img_input[:, :, 0] = np_img[2, :, :]  # density
         np_img_input[:, :, 1] = np_img[1, :, :]  # height
         print("IMG2IMG TRANSLATION: 2 Channels")
-    elif num_channel == 3:
+    elif num_channels == 3:
         np_img_input = np.zeros((width, width, 3))
         np_img_input[:, :, 0] = np_img[2, :, :]  # density
         np_img_input[:, :, 1] = np_img[1, :, :]  # height
@@ -92,10 +92,10 @@ def perform_img2img_translation(lyft2kitti_conv, np_img_input, num_channel):
     np_img_output = np.zeros((3, width, width))
     np_img_output[2, :, :] = np_img_transformed[0, :, :]  # density
     np_img_output[1, :, :] = np_img_transformed[1, :, :]  # height
-    if num_channel == 3:
+    if num_channels == 3:
         np_img_output[0, :, :] = np_img_transformed[2, :, :]  # intensity
         print("IMG2IMG TRANSLATION OUTPUT: 3 Channels")
-    elif num_channel == 1:
+    elif num_channels == 1:
         print("IMG2IMG TRANSLATION OUTPUT: 1 Channel")
         np_img_output[0, :, :] = np_img_transformed[0, :, :]  # height
         np_img_output[1, :, :] = np_img_transformed[0, :, :]  # height
@@ -108,14 +108,13 @@ def perform_img2img_translation(lyft2kitti_conv, np_img_input, num_channel):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", type=str, default="None", help="choose dataset (lyft2kitti2, audi2kitti)")
-    parser.add_argument("--num_channel", type=int, default=None, help="Number of channels")
-    parser.add_argument("--model_def", type=str, default="config/complex_tiny_yolov3.cfg", help="path to model definition file")
-    parser.add_argument("--weights_path", type=str, default="checkpoints/tiny-yolov3_ckpt_epoch-220.pth", help="path to weights file")
+    parser.add_argument("--num_channels", type=int, default=None, help="Number of channels")
     parser.add_argument('--unit_config', type=str, default=None, help="UNIT net configuration")
     parser.add_argument('--unit_checkpoint', type=str, default=None, help="checkpoint of UNIT autoencoders")
     opt = parser.parse_args()
+    print(opt)
 
-    if not opt.num_channel:
+    if not opt.num_channels:
         print("Error: Select number of channels!")
         exit()
 
@@ -135,8 +134,8 @@ def main():
         #    continue
         lidarData = get_lidar(image_filename)
         b = bev_utils.removePoints(lidarData, cnf.boundary)
-        bev_array = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary, opt.num_channel)
-        bev_array_transformed = perform_img2img_translation(unit_conv, bev_array, opt.num_channel)
+        bev_array = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary, opt.num_channels)
+        bev_array_transformed = perform_img2img_translation(unit_conv, bev_array, opt.num_channels)
         #bev_array_transformed = postprocessing.blacken_pixel(bev_array_transformed, threshold=0.2)
         #bev_array_transformed[:, :, 2] = postprocessing.blacken_pixel(bev_array_transformed[:, :, 2], threshold=0.2)  # density
         #bev_array_transformed[:, :, 1] = postprocessing.blacken_pixel(bev_array_transformed[:, :, 1], threshold=0.2)  # height

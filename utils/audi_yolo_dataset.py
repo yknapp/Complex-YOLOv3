@@ -18,7 +18,7 @@ def resize(image, size):
 
 class AudiYOLODataset(AudiDataset):
 
-    def __init__(self, split='train', mode ='TRAIN', folder=None, data_aug=True, multiscale=False):
+    def __init__(self, split='train', mode ='TRAIN', num_channels=None, folder=None, data_aug=True, multiscale=False):
         super().__init__(split=split)
 
         self.split = split
@@ -29,6 +29,7 @@ class AudiYOLODataset(AudiDataset):
         self.min_size = self.img_size - 3 * 32
         self.max_size = self.img_size + 3 * 32
         self.batch_count = 0
+        self.num_channels = num_channels
 
         assert mode in ['TRAIN', 'EVAL', 'TEST'], 'Invalid mode: %s' % mode
         self.mode = mode
@@ -106,7 +107,7 @@ class AudiYOLODataset(AudiDataset):
                 lidarData, labels[:, 1:] = augUtils.complex_yolo_pc_augmentation(lidarData, labels[:, 1:], True)
 
             b = bev_utils.removePoints(lidarData, cnf.boundary)
-            rgb_map = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
+            rgb_map = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary, self.num_channels)
             target = bev_utils.build_yolo_target(labels)
             img_file = os.path.join(self.image_path, '%s_camera_frontcenter_%s.png' % (timestamp, idx))
 
@@ -130,7 +131,7 @@ class AudiYOLODataset(AudiDataset):
         else:
             lidarData = self.get_lidar(timestamp, idx)
             b = bev_utils.removePoints(lidarData, cnf.boundary)
-            rgb_map = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
+            rgb_map = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary, self.num_channels)
             img_file = os.path.join(self.image_path, '%s_camera_frontcenter_%s.png' % (timestamp, idx))
             return img_file, rgb_map
 

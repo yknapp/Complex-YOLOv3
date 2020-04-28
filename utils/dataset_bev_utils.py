@@ -34,7 +34,7 @@ def remove_fov_points(lidar_data, calib):
     b2 = b[fov_inds, :]
     return b2
 
-def makeBVFeature(PointCloud_, Discretization, bc, num_channel=3):
+def makeBVFeature(PointCloud_, Discretization, bc, num_channels):
 
     Height = cnf.BEV_HEIGHT + 1
     Width = cnf.BEV_WIDTH + 1
@@ -74,21 +74,22 @@ def makeBVFeature(PointCloud_, Discretization, bc, num_channel=3):
     RGB_Map[1, :, :] = heightMap[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # g_map
 
     # 3 channels: density, height, intensity
-    if num_channel == 3:
+    if num_channels == 3:
         RGB_Map[0, :, :] = intensityMap[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # b_map
-        print("BEV_UTILS: 3 Channels")
 
     # only 2 channels: no intensity
-    elif num_channel == 2:
+    elif num_channels == 2:
         RGB_Map[0, :, :] = np.zeros((cnf.BEV_HEIGHT, cnf.BEV_WIDTH))  # b_map with zeroes => test results without intensity
-        print("BEV_UTILS: 2 Channels")
 
     # only height channel
-    elif num_channel == 1:
+    elif num_channels == 1:
         RGB_Map[2, :, :] = heightMap[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # r_map
         RGB_Map[1, :, :] = heightMap[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # g_map
         RGB_Map[0, :, :] = heightMap[:cnf.BEV_HEIGHT, :cnf.BEV_WIDTH]  # b_map
-        print("BEV_UTILS: 1 Channel")
+
+    else:
+        print("Error making BEV: num_channels parameter is %s! Must be 3, 2 or 1." % num_channels)
+        exit()
 
     return RGB_Map
 

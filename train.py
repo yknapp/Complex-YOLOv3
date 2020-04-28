@@ -17,6 +17,7 @@ import torch.optim as optim
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=300, help="number of epochs")
+    parser.add_argument("--num_channels", type=int, default=None, help="Number of channels")
     parser.add_argument("--batch_size", type=int, default=4, help="size of each image batch")
     parser.add_argument("--gradient_accumulations", type=int, default=2, help="number of gradient accums before step")
     parser.add_argument("--model_def", type=str, default="config/complex_yolov3.cfg", help="path to model definition file")
@@ -48,6 +49,7 @@ if __name__ == "__main__":
     dataset = KittiYOLODataset(
         split='train',
         mode='TRAIN',
+        num_channels=opt.num_channels,
         folder='training',
         data_aug=False,
         multiscale=opt.multiscale_training

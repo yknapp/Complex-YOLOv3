@@ -18,7 +18,7 @@ def resize(image, size):
 
 class Lyft2KittiYOLODataset2(Lyft2KittiDataset):
 
-    def __init__(self, split='train', mode ='TRAIN', folder=None, data_aug=True, multiscale=False):
+    def __init__(self, split='train', mode ='TRAIN', num_channels=None, folder=None, data_aug=True, multiscale=False):
         super().__init__(split=split, folder=folder)
 
         self.split = split
@@ -29,6 +29,7 @@ class Lyft2KittiYOLODataset2(Lyft2KittiDataset):
         self.min_size = self.img_size - 3 * 32
         self.max_size = self.img_size + 3 * 32
         self.batch_count = 0
+        self.num_channels = num_channels
 
         assert mode in ['TRAIN', 'EVAL', 'TEST'], 'Invalid mode: %s' % mode
         self.mode = mode
@@ -97,7 +98,7 @@ class Lyft2KittiYOLODataset2(Lyft2KittiDataset):
                 lidarData, labels[:, 1:] = augUtils.complex_yolo_pc_augmentation(lidarData, labels[:, 1:], True)
 
             b = bev_utils.removePoints(lidarData, cnf.boundary)
-            rgb_map = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
+            rgb_map = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary, self.num_channels)
             target = bev_utils.build_yolo_target(labels)
             img_file = os.path.join(self.image_path, '%s.png' % sample_id)
 

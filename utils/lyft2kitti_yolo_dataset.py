@@ -19,7 +19,7 @@ def resize(image, size):
 
 class Lyft2KittiYOLODataset(LyftDataset):
 
-    def __init__(self, unit_config_path, unit_checkpoint_path, split='train', mode ='TRAIN', folder=None, data_aug=True, multiscale=False):
+    def __init__(self, unit_config_path, unit_checkpoint_path, split='train', mode ='TRAIN', num_channels=None, folder=None, data_aug=True, multiscale=False):
         super().__init__(split=split, folder=folder)
 
         self.split = split
@@ -30,6 +30,7 @@ class Lyft2KittiYOLODataset(LyftDataset):
         self.min_size = self.img_size - 3 * 32
         self.max_size = self.img_size + 3 * 32
         self.batch_count = 0
+        self.num_channels = num_channels
 
         assert mode in ['TRAIN', 'EVAL', 'TEST'], 'Invalid mode: %s' % mode
         self.mode = mode
@@ -112,7 +113,7 @@ class Lyft2KittiYOLODataset(LyftDataset):
                 lidarData, labels[:, 1:] = augUtils.complex_yolo_pc_augmentation(lidarData, labels[:, 1:], True)
 
             b = bev_utils.removePoints(lidarData, cnf.boundary)
-            rgb_map = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
+            rgb_map = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary, self.num_channels)
             target = bev_utils.build_yolo_target(labels)
             img_file = os.path.join(self.image_path, '%s.png' % sample_id)
 
@@ -145,7 +146,7 @@ class Lyft2KittiYOLODataset(LyftDataset):
                                                              calib.P)  # convert rect cam to velo cord
 
             b = bev_utils.removePoints(lidarData, cnf.boundary)
-            rgb_map = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
+            rgb_map = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary, self.num_channels)
             rgb_map = self.perform_img2img_translation(rgb_map)
 
             target = bev_utils.build_yolo_target(labels)
@@ -171,7 +172,7 @@ class Lyft2KittiYOLODataset(LyftDataset):
         else:
             lidarData = self.get_lidar(sample_id)
             b = bev_utils.removePoints(lidarData, cnf.boundary)
-            rgb_map = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
+            rgb_map = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary, self.num_channels)
             rgb_map = self.perform_img2img_translation(rgb_map)
             img_file = os.path.join(self.image_path, '%s.png' % sample_id)
             return img_file, rgb_map

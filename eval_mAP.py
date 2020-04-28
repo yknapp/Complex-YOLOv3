@@ -14,7 +14,7 @@ import torch.optim as optim
 #import utils.config as cnf
 import utils.config as cnf
 
-def evaluate(dataset_name, model, iou_thres, conf_thres, nms_thres, img_size, batch_size, unit_config_path, unit_checkpoint_path):
+def evaluate(dataset_name, model, iou_thres, conf_thres, nms_thres, img_size, batch_size, num_channels, unit_config_path, unit_checkpoint_path):
     model.eval()
 
     # Get dataloader
@@ -23,26 +23,26 @@ def evaluate(dataset_name, model, iou_thres, conf_thres, nms_thres, img_size, ba
     # prepare dataset
     if dataset_name == 'kitti':
         from utils.kitti_yolo_dataset import KittiYOLODataset
-        dataset = KittiYOLODataset(split=split, mode='EVAL', folder='training', data_aug=False)
+        dataset = KittiYOLODataset(split=split, mode='EVAL', num_channels=num_channels, folder='training', data_aug=False)
     elif dataset_name == 'lyft':
         from utils.lyft_yolo_dataset import LyftYOLODataset
-        dataset = LyftYOLODataset(split=split, mode='EVAL', folder='training', data_aug=False)
+        dataset = LyftYOLODataset(split=split, mode='EVAL', num_channels=num_channels, folder='training', data_aug=False)
     elif dataset_name == 'lyft2kitti':
         from utils.lyft2kitti_yolo_dataset import Lyft2KittiYOLODataset
         if None not in (unit_config_path, unit_checkpoint_path):
-            dataset = Lyft2KittiYOLODataset(unit_config_path=unit_config_path, unit_checkpoint_path=unit_checkpoint_path, split=split, mode='EVAL', folder='training', data_aug=False)
+            dataset = Lyft2KittiYOLODataset(unit_config_path=unit_config_path, unit_checkpoint_path=unit_checkpoint_path, split=split, mode='EVAL', num_channels=num_channels, folder='training', data_aug=False)
         else:
             print("Program arguments 'unit_config' and 'unit_checkpoint' must be set for dataset Lyft2Kitti")
             sys.exit()
     elif dataset_name == 'lyft2kitti2':
         from utils.lyft2kitti_yolo_dataset2 import Lyft2KittiYOLODataset2
-        dataset = Lyft2KittiYOLODataset2(split=split, mode='EVAL', folder='training', data_aug=False)
+        dataset = Lyft2KittiYOLODataset2(split=split, mode='EVAL', num_channels=num_channels, folder='training', data_aug=False)
     elif dataset_name == 'audi':
         from utils.audi_yolo_dataset import AudiYOLODataset
-        dataset = AudiYOLODataset(split=split, mode='EVAL', data_aug=False)
+        dataset = AudiYOLODataset(split=split, mode='EVAL', num_channels=num_channels, data_aug=False)
     elif dataset_name == 'audi2kitti':
         from utils.audi2kitti_yolo_dataset import Audi2KittiYOLODataset
-        dataset = Audi2KittiYOLODataset(split=split, mode='EVAL', data_aug=False)
+        dataset = Audi2KittiYOLODataset(split=split, mode='EVAL', num_channels=num_channels, data_aug=False)
     else:
         print("Error: Unknown dataset '%s'" % dataset_name)
         sys.exit()
@@ -79,6 +79,7 @@ def evaluate(dataset_name, model, iou_thres, conf_thres, nms_thres, img_size, ba
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", type=str, default="kitti", help="chose dataset (kitti, lyft, lyft2kitti, lyft2kitti2, audi, audi2kitti)")
+    parser.add_argument("--num_channels", type=int, default=None, help="Number of channels")
     parser.add_argument("--batch_size", type=int, default=10, help="size of each image batch")
     parser.add_argument("--model_def", type=str, default="config/complex_tiny_yolov3.cfg", help="path to model definition file")
     parser.add_argument("--weights_path", type=str, default="checkpoints/tiny-yolov3_ckpt_epoch-220.pth", help="path to weights file")
@@ -110,6 +111,7 @@ def main():
         nms_thres=opt.nms_thres,
         img_size=opt.img_size,
         batch_size=opt.batch_size,
+        num_channels=opt.num_channels,
         unit_config_path=opt.unit_config,
         unit_checkpoint_path=opt.unit_checkpoint
     )

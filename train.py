@@ -152,6 +152,7 @@ if __name__ == "__main__":
                 nms_thres=0.5,
                 img_size=opt.img_size,
                 batch_size=8,
+                num_channels=opt.num_channels,
                 unit_config_path=None,
                 unit_checkpoint_path=None
             )

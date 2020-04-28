@@ -1,10 +1,10 @@
 #!/bin/bash
 
-dataset=lyft2kitti2
+dataset=audi2kitti
 num_channels=1
 
 # UNIT
-unit_model_folder="unit_bev_new_lyft2kitti_1channel_folder"
+unit_model_folder=""
 unit_model_dir="/home/user/work/master_thesis/code/UNIT/outputs/$unit_model_folder"
 unit_checkpoint_dir=$unit_model_dir/checkpoints/
 

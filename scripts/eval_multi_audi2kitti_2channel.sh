@@ -1,15 +1,15 @@
 #!/bin/bash
 
-dataset=lyft2kitti2
-num_channels=1
-temp_bev_path="/home/user/work/master_thesis/datasets/lyft_kitti/object/training/bev"
+dataset=audi2kitti
+num_channels=2
+temp_bev_path="/home/user/work/master_thesis/datasets/audi/camera_lidar_semantic_bboxes/bev"
 
 # UNIT
-unit_model_folder="unit_bev_new_lyft2kitti_1channel_folder"
+unit_model_folder="unit_bev_new_audi2kitti_2channel_folder"
 unit_model_dir="/home/user/work/master_thesis/code/UNIT/outputs/$unit_model_folder"
 
 # ComplexYOLO
-yolo_weight="bev_1channel/weights/yolov3_ckpt_epoch-252_MAP-0.80.pth"
+yolo_weight="bev_2channel/weights/yolov3_ckpt_epoch-260_MAP-0.81.pth"
 yolo_model="complex_yolov3_low_res.cfg"
 
 # output

@@ -1,15 +1,15 @@
 #!/bin/bash
 
 dataset=lyft2kitti2
-num_channels=1
+num_channels=3
 
 # UNIT
-unit_model_folder="unit_bev_new_lyft2kitti_1channel_folder"
+unit_model_folder="unit_bev_new_lyft2kitti_3channel_folder"
 unit_model_dir="/home/user/work/master_thesis/code/UNIT/outputs/$unit_model_folder"
 unit_checkpoint_dir=$unit_model_dir/checkpoints/
 
 # ComplexYOLO
-yolo_weight="bev_1channel/weights/yolov3_ckpt_epoch-252_MAP-0.80.pth"
+yolo_weight=""
 yolo_model="complex_yolov3_low_res.cfg"
 
 # create BEV transformations

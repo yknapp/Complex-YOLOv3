@@ -67,21 +67,42 @@ def shift_image(input_img, x_shift=0, y_shift=0):
     return input_img_shifted
 
 
-def perform_img2img_translation(lyft2kitti_conv, np_img_input):
-    np_img = np.copy(np_img_input)
-    height, width, c = np_img.shape
-    ############### height 1 channel
-    #np_img_input1 = np.zeros((width, width, 1))
-    #np_img_input1[:, :, 0] = np_img[:, :, 0]  # height 1 channel
-    ###############
+def perform_img2img_translation(lyft2kitti_conv, np_img_input, num_channels):
+    height, width, c = np_img_input.shape
+    if num_channels == 1:
+        np_img = np.zeros((width, width, 1))
+        print("1: ", np_img.shape)
+        print("2: ", np_img_input.shape)
+        np_img[:, :, 0] = np_img_input[:, :, 0]  # height 1 channel
+    elif num_channels == 2:
+        np_img = np.zeros((width, width, 2))
+        np_img[:, :, 0] = np_img_input[:, :, 2]  # density
+        np_img[:, :, 1] = np_img_input[:, :, 1]  # height
+    elif num_channels == 3:
+        np_img = np.zeros((width, width, 3))
+        np_img[:, :, 0] = np_img_input[:, :, 2]  # density
+        np_img[:, :, 1] = np_img_input[:, :, 1]  # height
+        np_img[:, :, 2] = np_img_input[:, :, 0]  # intensity
+    else:
+        print("Error: Wrong number of channels: %s" % num_channels)
+        exit()
     np_img_transformed = lyft2kitti_conv.transform(np_img)
     # add shift to compensate the shift of UNIT transformation
-    np_img_transformed = shift_image(np_img_transformed, x_shift=-6, y_shift=1)
+    #np_img_transformed = shift_image(np_img_transformed, x_shift=-6, y_shift=1)
     #np_img_transformed = shift_image(np_img_transformed, x_shift=1, y_shift=-2)
-    np_img_output = np.zeros((width, width, 2))
-    #np_img_output[:, :, 1] = np_img_transformed[0, :, :] # density
-    np_img_output[:, :, 0] = np_img_transformed[0, :, :] # density
-    np_img_output[:, :, 1] = np_img_transformed[1, :, :] # height
+    np_img_output = np.zeros((width, width, 3))
+    if num_channels == 1:
+        np_img_output[:, :, 1] = np_img_transformed[0, :, :]  # height
+    elif num_channels == 2:
+        np_img_output[:, :, 0] = np_img_transformed[0, :, :]  # density
+        np_img_output[:, :, 1] = np_img_transformed[1, :, :]  # height
+    elif num_channels == 3:
+        np_img_output[:, :, 0] = np_img_transformed[0, :, :]  # density
+        np_img_output[:, :, 1] = np_img_transformed[1, :, :]  # height
+        np_img_output[:, :, 2] = np_img_transformed[2, :, :]  # intensity
+    else:
+        print("Error: Wrong number of channels: %s" % num_channels)
+        exit()
     return np_img_output
 
 
@@ -125,11 +146,12 @@ def extract_objects(bev_img, target, draw_bbox=False):
 
 
 def save_whole_bev_img_with_bboxes(img, target, dataset_name):
-    img2 = np.zeros((img.shape[0], img.shape[1], 3))
-    img2[:, :, 0] = img[:, :, 0]
-    img2[:, :, 1] = img[:, :, 1]
-    bev_utils.draw_box_in_bev(img2, target)
-    imageio.imwrite(dataset_name+".png", img2)
+    img_output = np.zeros((img.shape[1], img.shape[2], 3))
+    img_output[:, :, 0] = img[0, :, :]
+    img_output[:, :, 1] = img[1, :, :]
+    img_output[:, :, 2] = img[2, :, :]
+    bev_utils.draw_box_in_bev(img_output, target)
+    imageio.imwrite(dataset_name+".png", img_output)
 
 
 def save_pixel_values(img, title, show=False):
@@ -156,13 +178,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--file_index", type=int, default=0, help="File index of ComplexYOLO validation list")
     parser.add_argument("--dataset", type=str, default="None", help="chose dataset (lyft2kitti2, audi2kitti)")
-    parser.add_argument("--model_def", type=str, default="config/complex_tiny_yolov3.cfg",
-                        help="path to model definition file")
-    parser.add_argument("--weights_path", type=str, default="checkpoints/tiny-yolov3_ckpt_epoch-220.pth",
-                        help="path to weights file")
+    parser.add_argument("--num_channels", type=int, default=None, help="Number of channels")
     parser.add_argument('--unit_config', type=str, default=None, help="UNIT net configuration")
     parser.add_argument('--unit_checkpoint', type=str, default=None, help="checkpoint of UNIT autoencoders")
     opt = parser.parse_args()
+    print(opt)
 
     # get specific information to chosen dataset
     dataset, dataset_name, chosen_eval_files_path, get_lidar_label_calib = get_dataset_info(opt.dataset)
@@ -178,11 +198,13 @@ def main():
     lidar, labels, calib = get_lidar_label_calib(dataset, filename)
 
     b = bev_utils.removePoints(lidar, cnf.boundary)
-    bev_array_raw = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
-    bev_array = np.zeros((bev_array_raw.shape[1], bev_array_raw.shape[2], 2))
+    bev_array_raw = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary, opt.num_channels)
+    # transform to "normal" image array structure
+    bev_array = np.zeros((bev_array_raw.shape[1], bev_array_raw.shape[2], 3))
     bev_array[:, :, 0] = bev_array_raw[2, :, :]
     bev_array[:, :, 1] = bev_array_raw[1, :, :]
-    bev_array_transformed = perform_img2img_translation(unit_conv, bev_array)
+    bev_array[:, :, 2] = bev_array_raw[0, :, :]
+    bev_array_transformed = perform_img2img_translation(unit_conv, bev_array, opt.num_channels)
     #bev_array_transformed = postprocessing.blacken_pixel(bev_array_transformed, threshold=0.1953125)
     #bev_array_transformed[:, :, 0] = postprocessing.density_hist_matching(bev_array_transformed[:, :, 0])
 
@@ -199,11 +221,27 @@ def main():
     for idx in range(len(objects_list_original)):
         print("Processing object %s" % idx)
         object_class_name = list(dataset.CLASS_NAME_TO_ID.keys())[list(dataset.CLASS_NAME_TO_ID.values()).index(int(objects_class_list[idx]))]
-        save_pixel_values(objects_list_transformed[idx][:, :, 1], title='object %s %s %s2KITTI height' % (idx, object_class_name, dataset_name))
-        save_pixel_values(objects_list_original[idx][:, :, 1], title='object %s %s %s height' % (idx, object_class_name, dataset_name))
-        save_pixel_values(objects_list_original[idx][:, :, 0], title='object %s %s %s density' % (idx, object_class_name, dataset_name))
-        save_pixel_values(objects_list_transformed[idx][:, :, 0], title='object %s %s %s2KITTI density' % (idx, object_class_name, dataset_name))
-
+        # only height
+        if opt.num_channels == 1:
+            save_pixel_values(objects_list_original[idx][:, :, 1], title='object %s %s %s height' % (idx, object_class_name, dataset_name))
+            save_pixel_values(objects_list_transformed[idx][:, :, 1], title='object %s %s %s2KITTI height' % (idx, object_class_name, dataset_name))
+        # density and height
+        elif opt.num_channels == 2:
+            save_pixel_values(objects_list_original[idx][:, :, 1], title='object %s %s %s height' % (idx, object_class_name, dataset_name))
+            save_pixel_values(objects_list_original[idx][:, :, 0], title='object %s %s %s density' % (idx, object_class_name, dataset_name))
+            save_pixel_values(objects_list_transformed[idx][:, :, 1], title='object %s %s %s2KITTI height' % (idx, object_class_name, dataset_name))
+            save_pixel_values(objects_list_transformed[idx][:, :, 0], title='object %s %s %s2KITTI density' % (idx, object_class_name, dataset_name))
+        # density, height and intensity
+        elif opt.num_channels == 3:
+            save_pixel_values(objects_list_original[idx][:, :, 2], title='object %s %s %s intensity' % (idx, object_class_name, dataset_name))
+            save_pixel_values(objects_list_original[idx][:, :, 1], title='object %s %s %s height' % (idx, object_class_name, dataset_name))
+            save_pixel_values(objects_list_original[idx][:, :, 0], title='object %s %s %s density' % (idx, object_class_name, dataset_name))
+            save_pixel_values(objects_list_transformed[idx][:, :, 2], title='object %s %s %s2KITTI intensity' % (idx, object_class_name, dataset_name))
+            save_pixel_values(objects_list_transformed[idx][:, :, 1], title='object %s %s %s2KITTI height' % (idx, object_class_name, dataset_name))
+            save_pixel_values(objects_list_transformed[idx][:, :, 0], title='object %s %s %s2KITTI density' % (idx, object_class_name, dataset_name))
+        else:
+            print("Error: Wrong number of channels: %s" % opt.num_channels)
+            exit()
     save_whole_bev_img_with_bboxes(bev_original_int, target, dataset_name)
     save_whole_bev_img_with_bboxes(bev_transformed_int, target, dataset_name+"2KITTI")
 

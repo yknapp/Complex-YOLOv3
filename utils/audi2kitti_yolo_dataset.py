@@ -2,15 +2,16 @@
 import os
 import numpy as np
 import random
-from utils.audi2kitti_dataset import Audi2KittiDataset
 import utils.dataset_aug_utils as augUtils
 import utils.dataset_bev_utils as bev_utils
 import utils.config as cnf
-
 import torch
 import torch.nn.functional as F
-
 import cv2
+import postprocessing
+
+from utils.audi2kitti_dataset import Audi2KittiDataset
+
 
 def resize(image, size):
     image = F.interpolate(image.unsqueeze(0), size=size, mode="nearest").squeeze(0)
@@ -140,6 +141,19 @@ class Audi2KittiYOLODataset(Audi2KittiDataset):
                                                              calib.P)  # convert rect cam to velo cord
 
             rgb_map = self.get_bev(timestamp, idx)
+
+            ###############################################################################################
+            # set pixels black
+            # threshold = 0.05
+            # rgb_map[0, :, :] = postprocessing.blacken_pixel(rgb_map[0, :, :], threshold=threshold)  # intensity
+            # rgb_map[1, :, :] = postprocessing.blacken_pixel(rgb_map[1, :, :], threshold=threshold)  # height
+            # rgb_map[2, :, :] = postprocessing.blacken_pixel(rgb_map[2, :, :], threshold=threshold)  # density
+            # rgb_map = postprocessing.blacken_pixel(rgb_map, threshold=threshold)
+            ###############################################################################################
+            # histogram matching
+            # rgb_map[2, :, :] = postprocessing.density_hist_matching(rgb_map[2, :, :])
+            ###############################################################################################
+
             target = bev_utils.build_yolo_target(labels)
             img_file = os.path.join(self.image_path, '%s_camera_frontcenter_%s.png' % (timestamp, idx))
 

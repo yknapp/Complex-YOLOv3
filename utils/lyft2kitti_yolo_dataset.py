@@ -11,7 +11,7 @@ import utils.config as cnf
 import torch
 import torch.nn.functional as F
 
-from unit.lyft2kitti_converter import Lyft2KittiConverter
+from unit.unit_converter import Lyft2KittiConverter
 
 def resize(image, size):
     image = F.interpolate(image.unsqueeze(0), size=size, mode="nearest").squeeze(0)

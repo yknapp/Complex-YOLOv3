@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import argparse
 import utils.config as cnf
 import utils.dataset_bev_utils as bev_utils
+import postprocessing
 
 from skimage.measure import compare_ssim
 from unit.unit_converter import UnitConverter
@@ -163,7 +164,7 @@ def main():
         hist_original_sum_density = None
         hist_transformed_sum_density = None
         number_of_files = 0
-        for filename in filename_list[:10]:
+        for filename in filename_list:
             print("Processing: ", filename)
 
             # create bevs
@@ -178,6 +179,8 @@ def main():
             # convert from float32 to int8
             bev_original_int = (np.round_(bev_array * 255)).astype(np.uint8)
             bev_transformed_int = (np.round_(bev_array_transformed * 255)).astype(np.uint8)
+
+            #bev_transformed_int = postprocessing.density_hist_matching(bev_transformed_int)
 
             # create histograms
             hist_original_density = create_histogram(bev_original_int[:, :, 0], 255)

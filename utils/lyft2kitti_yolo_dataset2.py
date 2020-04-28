@@ -7,6 +7,7 @@ from utils.lyft2kitti_dataset2 import Lyft2KittiDataset
 import utils.dataset_aug_utils as augUtils
 import utils.dataset_bev_utils as bev_utils
 import utils.config as cnf
+import postprocessing
 
 import torch
 import torch.nn.functional as F
@@ -130,6 +131,17 @@ class Lyft2KittiYOLODataset2(Lyft2KittiDataset):
 
             rgb_map = self.get_bev(sample_id)
 
+            ###############################################################################################
+            # set pixels black
+            #threshold = 0.05
+            #rgb_map[1, :, :] = postprocessing.blacken_pixel(rgb_map[1, :, :], threshold=threshold)  # height
+            #rgb_map[2, :, :] = postprocessing.blacken_pixel(rgb_map[2, :, :], threshold=threshold)  # density
+            #rgb_map = postprocessing.blacken_pixel(rgb_map, threshold=threshold)
+            ###############################################################################################
+            # histogram matching
+            #rgb_map[2, :, :] = postprocessing.density_hist_matching(rgb_map[2, :, :])
+            ###############################################################################################
+
             target = bev_utils.build_yolo_target(labels)
             img_file = os.path.join(self.image_path, '%s.png' % sample_id)
 
@@ -153,6 +165,8 @@ class Lyft2KittiYOLODataset2(Lyft2KittiDataset):
         else:
             lidarData = self.get_lidar(sample_id)
             rgb_map = self.get_bev(sample_id)
+
+
             img_file = os.path.join(self.image_path, '%s.png' % sample_id)
             return img_file, rgb_map
 

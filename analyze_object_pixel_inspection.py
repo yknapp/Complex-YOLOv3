@@ -6,6 +6,7 @@ import utils.config as cnf
 import utils.dataset_bev_utils as bev_utils
 import utils.dataset_aug_utils as aug_utils
 import matplotlib.pyplot as plt
+import postprocessing
 
 from matplotlib import cm
 from matplotlib import colors
@@ -182,6 +183,8 @@ def main():
     bev_array[:, :, 0] = bev_array_raw[2, :, :]
     bev_array[:, :, 1] = bev_array_raw[1, :, :]
     bev_array_transformed = perform_img2img_translation(unit_conv, bev_array)
+    #bev_array_transformed = postprocessing.blacken_pixel(bev_array_transformed, threshold=0.1953125)
+    #bev_array_transformed[:, :, 0] = postprocessing.density_hist_matching(bev_array_transformed[:, :, 0])
 
     # convert from float32 to int8
     bev_original_int = (np.round_(bev_array * 255)).astype(np.uint8)

@@ -54,7 +54,9 @@ class Lyft2KittiDataset(torch_data.Dataset):
     def get_lidar(self, idx):
         lidar_file = os.path.join(self.lidar_path, '%s.bin' % idx)
         assert os.path.exists(lidar_file)
-        return np.fromfile(lidar_file, dtype=np.float32).reshape(-1, 4)
+        lidar_pc = np.fromfile(lidar_file, dtype=np.float32).reshape(-1, 4)
+        lidar_pc[:, 3] = 0.0  # set to zero, since lyft has no intensity values
+        return lidar_pc
 
     def get_calib(self, idx):
         calib_file = os.path.join(self.calib_path, '%s.txt' % idx)

@@ -58,19 +58,42 @@ def get_dataset_info(dataset):
     return dataset, dataset_name, chosen_eval_files_path, get_lidar
 
 
-def perform_img2img_translation(lyft2kitti_conv, np_img_input):
-    np_img = np.copy(np_img_input)
-    height, width, c = np_img.shape
-    ### height 1 channel
-    #np_img_input1 = np.zeros((width, width, 1))
-    #np_img_input1[:, :, 0] = np_img[:, :, 0]
-    ###
+def perform_img2img_translation(lyft2kitti_conv, np_img_input, num_channels):
+    height, width, c = np_img_input.shape
+    if num_channels == 1:
+        np_img = np.zeros((width, width, 1), dtype=np_img_input.dtype)
+        np_img[:, :, 0] = np_img_input[:, :, 1]  # height 1 channel
+    elif num_channels == 2:
+        np_img = np.zeros((width, width, 2), dtype=np_img_input.dtype)
+        np_img[:, :, 0] = np_img_input[:, :, 0]  # density
+        np_img[:, :, 1] = np_img_input[:, :, 1]  # height
+    elif num_channels == 3:
+        np_img = np.zeros((width, width, 3), dtype=np_img_input.dtype)
+        np_img[:, :, 0] = np_img_input[:, :, 0]  # density
+        np_img[:, :, 1] = np_img_input[:, :, 1]  # height
+        np_img[:, :, 2] = np_img_input[:, :, 2]  # intensity
+    else:
+        print("Error: Wrong number of channels: %s" % num_channels)
+        exit()
     np_img_transformed = lyft2kitti_conv.transform(np_img)
-    np_img_output = np.zeros((width, width, 2))
-    np_img_output[:, :, 0] = np_img_transformed[0, :, :]
-    np_img_output[:, :, 1] = np_img_transformed[1, :, :]
-    #np_img_output[:, :, 0] = np_img_transformed[0, :, :]
-    #np_img_output[:, :, 1] = np_img_transformed[0, :, :]
+    # add shift to compensate the shift of UNIT transformation
+    #np_img_transformed = shift_image(np_img_transformed, x_shift=-6, y_shift=1)
+    #np_img_transformed = shift_image(np_img_transformed, x_shift=1, y_shift=-2)
+    np_img_output = np.zeros((width, width, 3), dtype=np_img_input.dtype)
+    if num_channels == 1:
+        np_img_output[:, :, 0] = np_img_transformed[0, :, :]  # height
+        np_img_output[:, :, 1] = np_img_transformed[0, :, :]  # height
+        np_img_output[:, :, 2] = np_img_transformed[0, :, :]  # height
+    elif num_channels == 2:
+        np_img_output[:, :, 0] = np_img_transformed[0, :, :]  # density
+        np_img_output[:, :, 1] = np_img_transformed[1, :, :]  # height
+    elif num_channels == 3:
+        np_img_output[:, :, 0] = np_img_transformed[0, :, :]  # density
+        np_img_output[:, :, 1] = np_img_transformed[1, :, :]  # height
+        np_img_output[:, :, 2] = np_img_transformed[2, :, :]  # intensity
+    else:
+        print("Error: Wrong number of channels: %s" % num_channels)
+        exit()
     return np_img_output
 
 
@@ -145,9 +168,11 @@ def subplot_images(pointcloud_original, pointcloud_transformed):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", type=str, default="None", help="chose dataset (lyft2kitti2, audi2kitti)")
+    parser.add_argument("--num_channels", type=int, default=None, help="Number of channels")
     parser.add_argument('--unit_config', type=str, default=None, help="UNIT net configuration")
     parser.add_argument('--unit_checkpoint', type=str, default=None, help="checkpoint of UNIT autoencoders")
     opt = parser.parse_args()
+    print(opt)
 
     # get specific information to chosen dataset
     dataset, dataset_name, chosen_eval_files_path, get_lidar = get_dataset_info(opt.dataset)
@@ -163,6 +188,8 @@ def main():
         hist_transformed_sum_height = None
         hist_original_sum_density = None
         hist_transformed_sum_density = None
+        hist_original_sum_intensity = None
+        hist_transformed_sum_intensity = None
         number_of_files = 0
         for filename in filename_list:
             print("Processing: ", filename)
@@ -170,16 +197,18 @@ def main():
             # create bevs
             lidar = get_lidar(dataset, filename)
             b = bev_utils.removePoints(lidar, cnf.boundary)
-            bev_array_raw = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
-            bev_array = np.zeros((bev_array_raw.shape[1], bev_array_raw.shape[2], 2))
-            bev_array[:, :, 0] = bev_array_raw[2, :, :]
-            bev_array[:, :, 1] = bev_array_raw[1, :, :]
-            bev_array_transformed = perform_img2img_translation(unit_conv, bev_array)
+            bev_array_raw = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary, opt.num_channels)
+            bev_array = np.zeros((bev_array_raw.shape[1], bev_array_raw.shape[2], 3))
+            bev_array[:, :, 0] = bev_array_raw[2, :, :]  # density
+            bev_array[:, :, 1] = bev_array_raw[1, :, :]  # height
+            bev_array[:, :, 2] = bev_array_raw[0, :, :]  # intensity
+            bev_array_transformed = perform_img2img_translation(unit_conv, bev_array, opt.num_channels)
 
             # convert from float32 to int8
             bev_original_int = (np.round_(bev_array * 255)).astype(np.uint8)
             bev_transformed_int = (np.round_(bev_array_transformed * 255)).astype(np.uint8)
 
+            # postprocessing
             #bev_transformed_int = postprocessing.density_hist_matching(bev_transformed_int)
 
             # create histograms
@@ -187,6 +216,8 @@ def main():
             hist_transformed_density = create_histogram(bev_transformed_int[:, :, 0], 255)
             hist_original_height = create_histogram(bev_original_int[:, :, 1], 255)
             hist_transformed_height = create_histogram(bev_transformed_int[:, :, 1], 255)
+            hist_original_intensity = create_histogram(bev_original_int[:, :, 2], 255)
+            hist_transformed_intensity = create_histogram(bev_transformed_int[:, :, 2], 255)
 
             # add to sum histograms
             # DENSITY
@@ -207,28 +238,55 @@ def main():
                 hist_transformed_sum_height += hist_transformed_height
             else:
                 hist_transformed_sum_height = hist_transformed_height
+            # INTENSITY
+            if hist_original_sum_intensity is not None:
+                hist_original_sum_intensity += hist_original_intensity
+            else:
+                hist_original_sum_intensity = hist_original_intensity
+            if hist_transformed_sum_intensity is not None:
+                hist_transformed_sum_intensity += hist_transformed_intensity
+            else:
+                hist_transformed_sum_intensity = hist_transformed_intensity
 
             # count number of files
             number_of_files += 1
 
         # calculate mean histogram
-        # DENSITY
-        hist_original_mean_density = np.true_divide(hist_original_sum_density, number_of_files)
-        hist_transformed_mean_density = np.true_divide(hist_transformed_sum_density, number_of_files)
-        plot_histogram(hist_original_mean_density, label=dataset_name, title='BEV Histogram Density')
-        plot_histogram(hist_transformed_mean_density, label=dataset_name + '2kitti', title='BEV Histogram Density')
-        save_curr_histogram(output_filename='mean_density_histogram')
         # HEIGHT
         hist_original_mean_height = np.true_divide(hist_original_sum_height, number_of_files)
         hist_transformed_mean_height = np.true_divide(hist_transformed_sum_height, number_of_files)
         plot_histogram(hist_original_mean_height, label=dataset_name, title='BEV Histogram Height', clear=True)
-        plot_histogram(hist_transformed_mean_height, label=dataset_name+'2kitti', title='BEV Histogram Height')
-        save_curr_histogram(output_filename='mean_height_histogram')
+        plot_histogram(hist_transformed_mean_height, label=dataset_name + '2kitti', title='BEV Histogram Height')
+        output_filename_height = 'mean_height_histogram'
+        save_curr_histogram(output_filename=output_filename_height)
+        print("Saved plot to ", output_filename_height)
+        if opt.num_channels in (2, 3):
+            # DENSITY
+            hist_original_mean_density = np.true_divide(hist_original_sum_density, number_of_files)
+            hist_transformed_mean_density = np.true_divide(hist_transformed_sum_density, number_of_files)
+            plot_histogram(hist_original_mean_density, label=dataset_name, title='BEV Histogram Density', clear=True)
+            plot_histogram(hist_transformed_mean_density, label=dataset_name + '2kitti', title='BEV Histogram Density')
+            output_filename_density = 'mean_density_histogram'
+            save_curr_histogram(output_filename=output_filename_density)
+            print("Saved plot to ", output_filename_density)
+        if opt.num_channels == 3:
+            # INTENSITY
+            hist_original_mean_intensity = np.true_divide(hist_original_sum_intensity, number_of_files)
+            hist_transformed_mean_intensity = np.true_divide(hist_transformed_sum_intensity, number_of_files)
+            plot_histogram(hist_original_mean_intensity, label=dataset_name, title='BEV Histogram Intensity', clear=True)
+            plot_histogram(hist_transformed_mean_intensity, label=dataset_name + '2kitti', title='BEV Histogram Intensity')
+            output_filename_intensity = 'mean_intensity_histogram'
+            save_curr_histogram(output_filename=output_filename_intensity)
+            print("Saved plot to ", output_filename_intensity)
+        if opt.num_channels not in (1, 2, 3):
+            print("Error: Wrong number of channels: %s" % opt.num_channels)
+            exit()
 
     # KITTI without transformations
     else:
         hist_sum_height = None
         hist_sum_density = None
+        hist_sum_intensity = None
         number_of_files = 0
         for filename in filename_list:
             print("Processing: ", filename)
@@ -236,10 +294,11 @@ def main():
             # create bevs
             lidar = get_lidar(dataset, filename)
             b = bev_utils.removePoints(lidar, cnf.boundary)
-            bev_array_raw = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
-            bev_array = np.zeros((bev_array_raw.shape[1], bev_array_raw.shape[2], 2))
+            bev_array_raw = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary, num_channels=opt.num_channels)
+            bev_array = np.zeros((bev_array_raw.shape[1], bev_array_raw.shape[2], 3))
             bev_array[:, :, 0] = bev_array_raw[2, :, :]
             bev_array[:, :, 1] = bev_array_raw[1, :, :]
+            bev_array[:, :, 2] = bev_array_raw[0, :, :]
 
             # convert from float32 to int8
             bev_int = (np.round_(bev_array * 255)).astype(np.uint8)
@@ -247,6 +306,7 @@ def main():
             # create histograms
             hist_density = create_histogram(bev_int[:, :, 0], 255)
             hist_height = create_histogram(bev_int[:, :, 1], 255)
+            hist_intensity = create_histogram(bev_int[:, :, 2], 255)
 
             # add to sum histograms
             # DENSITY
@@ -259,20 +319,39 @@ def main():
                 hist_sum_height += hist_height
             else:
                 hist_sum_height = hist_height
+            # INTENSITY
+            if hist_sum_intensity is not None:
+                hist_sum_intensity += hist_intensity
+            else:
+                hist_sum_intensity = hist_intensity
 
             # count number of files
             number_of_files += 1
 
         # calculate mean histogram
-        # DENSITY
-        hist_original_mean_density = np.true_divide(hist_sum_density, number_of_files)
-        plot_histogram(hist_original_mean_density, label=dataset_name, title='BEV Histogram Density')
-        save_curr_histogram(output_filename='mean_density_histogram')
         # HEIGHT
         hist_original_mean_height = np.true_divide(hist_sum_height, number_of_files)
         plot_histogram(hist_original_mean_height, label=dataset_name, title='BEV Histogram Height', clear=True)
-        save_curr_histogram(output_filename='mean_height_histogram')
-
+        output_filename_height = 'mean_height_histogram'
+        save_curr_histogram(output_filename=output_filename_height)
+        print("Saved plot to ", output_filename_height)
+        if opt.num_channels in (2, 3):
+            # DENSITY
+            hist_original_mean_density = np.true_divide(hist_sum_density, number_of_files)
+            plot_histogram(hist_original_mean_density, label=dataset_name, title='BEV Histogram Density', clear=True)
+            output_filename_density = 'mean_density_histogram'
+            save_curr_histogram(output_filename=output_filename_density)
+            print("Saved plot to ", output_filename_density)
+        if opt.num_channels == 3:
+            # INTENSITY
+            hist_original_mean_intensity = np.true_divide(hist_sum_intensity, number_of_files)
+            plot_histogram(hist_original_mean_intensity, label=dataset_name, title='BEV Histogram Intensity', clear=True)
+            output_filename_intensity = 'mean_intensity_histogram'
+            save_curr_histogram(output_filename=output_filename_intensity)
+            print("Saved plot to ", output_filename_intensity)
+        if opt.num_channels not in (1, 2, 3):
+            print("Error: Wrong number of channels: %s" % opt.num_channels)
+            exit()
 
 if __name__ == '__main__':
     main()

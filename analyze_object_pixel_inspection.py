@@ -90,7 +90,9 @@ def perform_img2img_translation(lyft2kitti_conv, np_img_input, num_channels):
     #np_img_transformed = shift_image(np_img_transformed, x_shift=1, y_shift=-2)
     np_img_output = np.zeros((width, width, 3), dtype=np_img_input.dtype)
     if num_channels == 1:
+        np_img_output[:, :, 0] = np_img_transformed[0, :, :]  # height
         np_img_output[:, :, 1] = np_img_transformed[0, :, :]  # height
+        np_img_output[:, :, 2] = np_img_transformed[0, :, :]  # height
     elif num_channels == 2:
         np_img_output[:, :, 0] = np_img_transformed[0, :, :]  # density
         np_img_output[:, :, 1] = np_img_transformed[1, :, :]  # height
@@ -144,12 +146,8 @@ def extract_objects(bev_img, target, draw_bbox=False):
 
 
 def save_whole_bev_img_with_bboxes(img, target, dataset_name):
-    img_output = np.zeros((img.shape[1], img.shape[2], 3))
-    img_output[:, :, 0] = img[0, :, :]
-    img_output[:, :, 1] = img[1, :, :]
-    img_output[:, :, 2] = img[2, :, :]
-    bev_utils.draw_box_in_bev(img_output, target)
-    imageio.imwrite(dataset_name+".png", img_output)
+    bev_utils.draw_box_in_bev(img, target)
+    imageio.imwrite(dataset_name+".png", img)
 
 
 def save_pixel_values(img, title, show=False):

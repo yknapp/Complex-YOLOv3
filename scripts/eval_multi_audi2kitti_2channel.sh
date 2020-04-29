@@ -5,7 +5,7 @@ num_channels=2
 temp_bev_path="/home/user/work/master_thesis/datasets/audi/camera_lidar_semantic_bboxes/bev"
 
 # UNIT
-unit_model_folder="unit_bev_new_audi2kitti_2channel_folder"
+unit_model_folder="unit_bev_new_audi2kitti_2channel_folder_3"
 unit_model_dir="/home/user/work/master_thesis/code/UNIT/outputs/$unit_model_folder"
 
 # ComplexYOLO

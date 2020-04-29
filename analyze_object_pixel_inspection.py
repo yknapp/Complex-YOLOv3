@@ -70,19 +70,17 @@ def shift_image(input_img, x_shift=0, y_shift=0):
 def perform_img2img_translation(lyft2kitti_conv, np_img_input, num_channels):
     height, width, c = np_img_input.shape
     if num_channels == 1:
-        np_img = np.zeros((width, width, 1))
-        print("1: ", np_img.shape)
-        print("2: ", np_img_input.shape)
-        np_img[:, :, 0] = np_img_input[:, :, 0]  # height 1 channel
+        np_img = np.zeros((width, width, 1), dtype=np_img_input.dtype)
+        np_img[:, :, 1] = np_img_input[:, :, 1]  # height 1 channel
     elif num_channels == 2:
-        np_img = np.zeros((width, width, 2))
-        np_img[:, :, 0] = np_img_input[:, :, 2]  # density
+        np_img = np.zeros((width, width, 2), dtype=np_img_input.dtype)
+        np_img[:, :, 0] = np_img_input[:, :, 0]  # density
         np_img[:, :, 1] = np_img_input[:, :, 1]  # height
     elif num_channels == 3:
-        np_img = np.zeros((width, width, 3))
-        np_img[:, :, 0] = np_img_input[:, :, 2]  # density
+        np_img = np.zeros((width, width, 3), dtype=np_img_input.dtype)
+        np_img[:, :, 0] = np_img_input[:, :, 0]  # density
         np_img[:, :, 1] = np_img_input[:, :, 1]  # height
-        np_img[:, :, 2] = np_img_input[:, :, 0]  # intensity
+        np_img[:, :, 2] = np_img_input[:, :, 2]  # intensity
     else:
         print("Error: Wrong number of channels: %s" % num_channels)
         exit()
@@ -90,7 +88,7 @@ def perform_img2img_translation(lyft2kitti_conv, np_img_input, num_channels):
     # add shift to compensate the shift of UNIT transformation
     #np_img_transformed = shift_image(np_img_transformed, x_shift=-6, y_shift=1)
     #np_img_transformed = shift_image(np_img_transformed, x_shift=1, y_shift=-2)
-    np_img_output = np.zeros((width, width, 3))
+    np_img_output = np.zeros((width, width, 3), dtype=np_img_input.dtype)
     if num_channels == 1:
         np_img_output[:, :, 1] = np_img_transformed[0, :, :]  # height
     elif num_channels == 2:
@@ -201,9 +199,9 @@ def main():
     bev_array_raw = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary, opt.num_channels)
     # transform to "normal" image array structure
     bev_array = np.zeros((bev_array_raw.shape[1], bev_array_raw.shape[2], 3))
-    bev_array[:, :, 0] = bev_array_raw[2, :, :]
-    bev_array[:, :, 1] = bev_array_raw[1, :, :]
-    bev_array[:, :, 2] = bev_array_raw[0, :, :]
+    bev_array[:, :, 0] = bev_array_raw[2, :, :]  # density
+    bev_array[:, :, 1] = bev_array_raw[1, :, :]  # height
+    bev_array[:, :, 2] = bev_array_raw[0, :, :]  # intensity
     bev_array_transformed = perform_img2img_translation(unit_conv, bev_array, opt.num_channels)
     #bev_array_transformed = postprocessing.blacken_pixel(bev_array_transformed, threshold=0.1953125)
     #bev_array_transformed[:, :, 0] = postprocessing.density_hist_matching(bev_array_transformed[:, :, 0])

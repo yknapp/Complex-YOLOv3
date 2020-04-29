@@ -2,7 +2,7 @@
 
 dataset=lyft2kitti2
 num_channel=3
-file_index=488
+file_index=488  # pedestrian: 7
 
 unit_model_folder="unit_bev_new_lyft2kitti_3channel_folder"
 unit_model_dir="/home/user/work/master_thesis/code/UNIT/outputs/$unit_model_folder"

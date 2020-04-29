@@ -71,7 +71,7 @@ def perform_img2img_translation(lyft2kitti_conv, np_img_input, num_channels):
     height, width, c = np_img_input.shape
     if num_channels == 1:
         np_img = np.zeros((width, width, 1), dtype=np_img_input.dtype)
-        np_img[:, :, 1] = np_img_input[:, :, 1]  # height 1 channel
+        np_img[:, :, 0] = np_img_input[:, :, 1]  # height 1 channel
     elif num_channels == 2:
         np_img = np.zeros((width, width, 2), dtype=np_img_input.dtype)
         np_img[:, :, 0] = np_img_input[:, :, 0]  # density

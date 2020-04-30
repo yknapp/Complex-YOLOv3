@@ -71,8 +71,8 @@ def perform_img2img_translation(lyft2kitti_conv, np_img_input, num_channels):
     np_img = np.copy(np_img_input)
     c, height, width = np_img.shape
     if num_channels == 1:
-        np_img_input1 = np.zeros((width, width, 1))
-        np_img_input1[:, :, 0] = np_img[0, :, :]  # height
+        np_img_input = np.zeros((width, width, 1))
+        np_img_input[:, :, 0] = np_img[0, :, :]  # height
         print("IMG2IMG TRANSLATION: 1 Channel")
     elif num_channels == 2:
         np_img_input = np.zeros((width, width, 2))
@@ -90,16 +90,19 @@ def perform_img2img_translation(lyft2kitti_conv, np_img_input, num_channels):
     #np_img_transformed = shift_image(np_img_transformed, x_shift=-6, y_shift=1)
     #np_img_transformed = shift_image(np_img_transformed, x_shift=1, y_shift=-2)
     np_img_output = np.zeros((3, width, width))
-    np_img_output[2, :, :] = np_img_transformed[0, :, :]  # density
-    np_img_output[1, :, :] = np_img_transformed[1, :, :]  # height
-    if num_channels == 3:
-        np_img_output[0, :, :] = np_img_transformed[2, :, :]  # intensity
-        print("IMG2IMG TRANSLATION OUTPUT: 3 Channels")
-    elif num_channels == 1:
+    if num_channels == 1:
         print("IMG2IMG TRANSLATION OUTPUT: 1 Channel")
         np_img_output[0, :, :] = np_img_transformed[0, :, :]  # height
         np_img_output[1, :, :] = np_img_transformed[0, :, :]  # height
         np_img_output[2, :, :] = np_img_transformed[0, :, :]  # height
+    elif num_channels == 2:
+        np_img_output[2, :, :] = np_img_transformed[0, :, :]  # density
+        np_img_output[1, :, :] = np_img_transformed[1, :, :]  # height
+    elif num_channels == 3:
+        np_img_output[2, :, :] = np_img_transformed[0, :, :]  # density
+        np_img_output[1, :, :] = np_img_transformed[1, :, :]  # height
+        np_img_output[0, :, :] = np_img_transformed[2, :, :]  # intensity
+        print("IMG2IMG TRANSLATION OUTPUT: 3 Channels")
     else:
         print("IMG2IMG TRANSLATION OUTPUT: 2 Channels")
     return np_img_output

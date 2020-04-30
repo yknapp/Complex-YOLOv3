@@ -57,7 +57,7 @@ def histogram_matching(np_img_src, np_img_ref):
     return src_after_transform
 
 
-def density_hist_matching(density_channel):
+def density_hist_matching(density_channel, num_channels):
     # map given density channel to [0, 255], so histogram matching can be applied
     density_channel_int = (np.round_(density_channel * 255)).astype(np.uint8)
 
@@ -71,7 +71,7 @@ def density_hist_matching(density_channel):
     kitti_lidar = dataset.get_lidar(int(random_filename))
     b = bev_utils.removePoints(kitti_lidar, cnf.boundary)
     # b = bev_utils.remove_fov_points(b, calib)  # remove points outside camera FOV
-    kitti_bev = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
+    kitti_bev = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary, num_channels)
     density_channel_kitti = kitti_bev[2, :, :]
     density_channel_kitti_int = (np.round_(density_channel_kitti * 255)).astype(np.uint8)
 

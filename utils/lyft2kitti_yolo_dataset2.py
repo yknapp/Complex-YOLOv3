@@ -135,14 +135,17 @@ class Lyft2KittiYOLODataset2(Lyft2KittiDataset):
 
             ###############################################################################################
             # set pixels black
-            #threshold = 0.05
+            #threshold = 0.375  # 1,5 meter
+            #threshold = 0.25  # 1 meter
+            #threshold = 0.125  # 0,5 meter
             #rgb_map[0, :, :] = postprocessing.blacken_pixel(rgb_map[0, :, :], threshold=threshold)  # intensity
             #rgb_map[1, :, :] = postprocessing.blacken_pixel(rgb_map[1, :, :], threshold=threshold)  # height
             #rgb_map[2, :, :] = postprocessing.blacken_pixel(rgb_map[2, :, :], threshold=threshold)  # density
             #rgb_map = postprocessing.blacken_pixel(rgb_map, threshold=threshold)
             ###############################################################################################
             # histogram matching
-            #rgb_map[2, :, :] = postprocessing.density_hist_matching(rgb_map[2, :, :])
+            #num_channels = 2
+            #rgb_map[2, :, :] = postprocessing.density_hist_matching(rgb_map[2, :, :], num_channels)
             ###############################################################################################
 
             target = bev_utils.build_yolo_target(labels)
@@ -168,8 +171,6 @@ class Lyft2KittiYOLODataset2(Lyft2KittiDataset):
         else:
             lidarData = self.get_lidar(sample_id)
             rgb_map = self.get_bev(sample_id)
-
-
             img_file = os.path.join(self.image_path, '%s.png' % sample_id)
             return img_file, rgb_map
 

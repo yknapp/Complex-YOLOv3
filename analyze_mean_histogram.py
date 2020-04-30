@@ -58,6 +58,22 @@ def get_dataset_info(dataset):
     return dataset, dataset_name, chosen_eval_files_path, get_lidar
 
 
+def shift_image(input_img, x_shift=0, y_shift=0):
+    input_img_shifted = np.copy(input_img)
+    input_img_shifted = np.roll(input_img_shifted, x_shift)
+    input_img_shifted = np.roll(input_img_shifted, y_shift, axis=1)
+    # clear the pixels, which were shifted from the right to the left side of the image
+    if x_shift < 0:
+        input_img_shifted[:, :, x_shift:] = 0.0
+    else:
+        input_img_shifted[:, :, :x_shift] = 0.0
+    if y_shift < 0:
+        input_img_shifted[:, y_shift:, :] = 0.0
+    else:
+        input_img_shifted[:, :y_shift, :] = 0.0
+    return input_img_shifted
+
+
 def perform_img2img_translation(lyft2kitti_conv, np_img_input, num_channels):
     height, width, c = np_img_input.shape
     if num_channels == 1:
@@ -209,7 +225,7 @@ def main():
             bev_transformed_int = (np.round_(bev_array_transformed * 255)).astype(np.uint8)
 
             # postprocessing
-            #bev_transformed_int = postprocessing.density_hist_matching(bev_transformed_int)
+            #bev_transformed_int[:, :, 0] = postprocessing.density_hist_matching(bev_transformed_int[:, :, 0], opt.num_channels)
 
             # create histograms
             hist_original_density = create_histogram(bev_original_int[:, :, 0], 255)

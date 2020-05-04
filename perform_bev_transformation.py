@@ -114,6 +114,7 @@ def main():
     parser.add_argument("--num_channels", type=int, default=None, help="Number of channels")
     parser.add_argument('--unit_config', type=str, default=None, help="UNIT net configuration")
     parser.add_argument('--unit_checkpoint', type=str, default=None, help="checkpoint of UNIT autoencoders")
+    parser.add_argument('--bev_output_path', type=str, default=None, help="optional alternative path for generated BEVs")
     opt = parser.parse_args()
     print(opt)
 
@@ -123,6 +124,9 @@ def main():
 
     # get specific information to chosen dataset
     chosen_eval_files_path, bev_output_path, get_lidar = get_dataset_info(opt.dataset)
+
+    if opt.bev_output_path is not None:
+        bev_output_path = opt.bev_output_path
 
     unit_conv = UnitConverter(opt.unit_config, opt.unit_checkpoint)
 

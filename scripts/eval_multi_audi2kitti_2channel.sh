@@ -2,7 +2,7 @@
 
 dataset=audi2kitti
 num_channels=2
-temp_bev_path="/home/user/work/master_thesis/datasets/audi/camera_lidar_semantic_bboxes/bev"
+temp_bev_path="/home/user/work/master_thesis/datasets/audi/camera_lidar_semantic_bboxes/bev_2channel"
 
 # UNIT
 unit_model_folder="unit_bev_new_audi2kitti_2channel_folder_3"
@@ -24,7 +24,7 @@ do
   
   # create BEV transformations  
   conda activate ComplexYOLO_0.4.1
-  python perform_bev_transformation.py --dataset $dataset --num_channels $num_channels --unit_config $unit_model_dir/config.yaml --unit_checkpoint $checkpoint
+  python perform_bev_transformation.py --dataset $dataset --num_channels $num_channels --unit_config $unit_model_dir/config.yaml --unit_checkpoint $checkpoint --bev_output_path $temp_bev_path
 
   # evaluate transformations
   conda activate ComplexYOLO_1.1

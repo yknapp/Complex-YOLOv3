@@ -28,5 +28,5 @@ do
 
   # evaluate transformations
   conda activate ComplexYOLO_1.1
-  python eval_mAP.py --dataset $dataset --num_channels $num_channels --model_def config/$yolo_model --weights_path checkpoints/$yolo_weight >> $output_file
+  python eval_mAP.py --dataset $dataset --num_channels $num_channels --model_def config/$yolo_model --weights_path checkpoints/$yolo_weight --alter_bev_path $temp_bev_path >> $output_file
 done

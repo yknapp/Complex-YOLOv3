@@ -14,7 +14,7 @@ import torch.optim as optim
 #import utils.config as cnf
 import utils.config as cnf
 
-def evaluate(dataset_name, model, iou_thres, conf_thres, nms_thres, img_size, batch_size, num_channels, unit_config_path, unit_checkpoint_path):
+def evaluate(dataset_name, model, iou_thres, conf_thres, nms_thres, img_size, batch_size, num_channels, unit_config_path, unit_checkpoint_path, alter_bev_path=None):
     model.eval()
 
     # Get dataloader
@@ -36,13 +36,13 @@ def evaluate(dataset_name, model, iou_thres, conf_thres, nms_thres, img_size, ba
             sys.exit()
     elif dataset_name == 'lyft2kitti2':
         from utils.lyft2kitti_yolo_dataset2 import Lyft2KittiYOLODataset2
-        dataset = Lyft2KittiYOLODataset2(split=split, mode='EVAL', num_channels=num_channels, folder='training', data_aug=False)
+        dataset = Lyft2KittiYOLODataset2(split=split, mode='EVAL', num_channels=num_channels, folder='training', data_aug=False, alter_bev_path=alter_bev_path)
     elif dataset_name == 'audi':
         from utils.audi_yolo_dataset import AudiYOLODataset
         dataset = AudiYOLODataset(split=split, mode='EVAL', num_channels=num_channels, data_aug=False)
     elif dataset_name == 'audi2kitti':
         from utils.audi2kitti_yolo_dataset import Audi2KittiYOLODataset
-        dataset = Audi2KittiYOLODataset(split=split, mode='EVAL', num_channels=num_channels, data_aug=False)
+        dataset = Audi2KittiYOLODataset(split=split, mode='EVAL', num_channels=num_channels, data_aug=False, alter_bev_path=alter_bev_path)
     else:
         print("Error: Unknown dataset '%s'" % dataset_name)
         sys.exit()
@@ -90,6 +90,7 @@ def main():
     parser.add_argument("--img_size", type=int, default=cnf.BEV_WIDTH, help="size of each image dimension")
     parser.add_argument('--unit_config', type=str, help="UNIT net configuration")
     parser.add_argument('--unit_checkpoint', type=str, help="checkpoint of UNIT autoencoders")
+    parser.add_argument('--alter_bev_path', type=str, default=None, help="optional alternative path for generated BEVs")
     opt = parser.parse_args()
     print(opt)
 
@@ -113,7 +114,8 @@ def main():
         batch_size=opt.batch_size,
         num_channels=opt.num_channels,
         unit_config_path=opt.unit_config,
-        unit_checkpoint_path=opt.unit_checkpoint
+        unit_checkpoint_path=opt.unit_checkpoint,
+        alter_bev_path=opt.alter_bev_path
     )
 
     print("Average Precisions:")
